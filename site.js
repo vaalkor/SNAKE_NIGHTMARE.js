@@ -1,19 +1,24 @@
-'use strict'
+'use strict';
 ////=====CANVAS DATA=====/////
-var sizes = [100,200,300,400,500,600,700,800,900,1000,1100,1200];
 var canvas;
 var ctx;
+var backgroundColor     = "#333333";
+var gridColor           = "#111111";
 ////=====ANIMATION DATA==/////
-var lastFrameMs = 0;
-var maxFps = 20;
+var lastFrameMs         = 0;
+var maxFps              = 20;
 ////=====KEY DATA========////////
-var keysPressed = {"37":false,"38":false,"39":false,"40":false,"87":false,"65":false,"83":false,"68":false};
+var keysPressed         = {"37":false,"38":false,"39":false,"40":false,"87":false,"65":false,"83":false,"68":false};
 ////=====SNAKE DATA======//////
-var gameInProgress = true; //this is briefly set to true for testing porpoises...
-var printWinnerText = false;
-var winnerId = -1;
-var gridSize = 100;
-var gameIteration = 0;
+var brModeEnabled       = false;
+var sprintModeEnabled   = false;
+var bombModeEnabled     = false;
+var cupWinLimit         = 10;
+var gridSize            = 100;
+var gameIteration       = 0;
+var winnerId            = -1;
+var gameInProgress      = true;
+var playOnPlayersReady  = true;
 
 // declare tail collision array
 var tailArray = new Array(gridSize);
@@ -25,25 +30,28 @@ for(let i=0;i<gridSize;i++)
 
 
 var players = [];
-players[0] = createPlayer(0,{x:75,y:75}, "#e6194b", {"up":38,"down":40,"left":37,"right":39});
-players[1] = createPlayer(1,{x:25,y:25}, "#3cb44b", {"up":87,"down":83,"left":65,"right":68});
-players[2] = createPlayer(2,{x:25,y:25}, "#ffe119", {"up":87,"down":83,"left":65,"right":68});
-players[3] = createPlayer(3,{x:11,y:11}, "#0082c8", {"up":87,"down":83,"left":65,"right":68});
+players[0] = createPlayer(0,{x:75,y:75}, "#e6194b", {"up":38,"down":40,"left":37,"right":39}, [38,40,37,39]);
+players[1] = createPlayer(1,{x:25,y:25}, "#3cb44b", {"up":87,"down":83,"left":65,"right":68}, [87,83,65,68]);
+players[2] = createPlayer(2,{x:75,y:25}, "#ffe119", {"up":87,"down":83,"left":65,"right":68}, [87,83,65,68]);
+players[3] = createPlayer(3,{x:25,y:75}, "#0082c8", {"up":87,"down":83,"left":65,"right":68}, [87,83,65,68]);
 
-function createPlayer(id, startPos,color,keyMapping)
+function createPlayer(id, startPos,color,keyMapping,keySet)
 {
-    var player          = {};
-    player.id           = id;
-    player.enabled      = false;
-    player.alive        = false;
-    player.ready        = false;
-    player.pos          = startPos;
-    player.tempPos      = startPos;
-    player.startPos     = startPos; //used for resetting after a game has ended lad....
-    player.color        = color;
-    player.direction    = {x: 1, y: 0};
-    player.keyMapping   = keyMapping;
-    player.name         = "Choose Name";
+    var player              = {};
+    player.id               = id;
+    player.enabled          = false;
+    player.alive            = false;
+    player.ready            = false;
+    player.pos              = startPos;
+    player.tempPos          = startPos;
+    player.startPos         = startPos; //used for resetting after a game has ended lad....
+    player.color            = color;
+    player.direction        = {x: 1, y: 0};
+    player.startDirection   = {x: 1, y: 0};
+    player.keyMapping       = keyMapping;
+    player.keySet           = keySet;
+    player.name             = "Choose Name";
+    player.wins             = 0;
     return player;
 }
 
@@ -164,17 +172,43 @@ function checkWinConditions()
 
     if(numAlive == 0)
     {
-        gameInProgess = false;
+        gameInProgress = false;
         winnerId = -1;
     }
     else if(numAlive == 1)
     {
         gameInProgress = false;
         winnerId = lastAliveId;
+        players[winnerId].wins++;
+
+        if(players[winnerId].wins == cupWinLimit)
+        {
+            //CUP HAS BEEN WON!!! SICK MATE!!!
+        }
     }
 }
 
+function resetGame()
+{
+    players.forEach(function(p){
+        p.alive = true;
+        p.direction = p.startDirection;
+        p.ready = false;
+        p.pos = p.startPos;
+    });
+}
+
 ////=====DRAWING FUNCTIONS======//////
+function drawGrid(currentBlockSize)
+{
+    ctx.fillStyle = gridColor;
+    for(let i=1;i<gridSize;i++)
+    {
+        ctx.fillRect(i*currentBlockSize, 0, 1, canvas.width);
+        ctx.fillRect(0,i*currentBlockSize, canvas.height, 1);
+    }
+
+}
 function drawSquare(x,y,width,color)
 {
     ctx.fillStyle = color;
@@ -183,8 +217,12 @@ function drawSquare(x,y,width,color)
 function draw()
 {
     //clear the canvas
-    canvas.width += 0;
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(0,0, canvas.height, canvas.width);    
+
     var currentBlockSize = canvas.height / gridSize;
+    drawGrid(currentBlockSize);
+
     //draw tails
     for(let i=0;i<gridSize;i++)
         for(let j=0; j<gridSize;j++)
@@ -209,7 +247,7 @@ function draw()
         {
             ctx.fillText("Draw... You all suck ",(canvas.width/2-0.2*canvas.width),(canvas.height/2-0.2*canvas.height));
         }else{
-            ctx.fillText(players[winnerId].name+"Wins!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));
+            ctx.fillText(players[winnerId].name+" Wins!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));
         }
     }
 }
@@ -219,6 +257,10 @@ players[0].enabled = true;
 players[0].alive = true;
 players[1].enabled = true;
 players[1].alive = true;
+players[2].enabled = true;
+players[2].alive = true;
+players[3].enabled = true;
+players[3].alive = true;
 
 function mainLoop(timestamp)
 {    
@@ -243,6 +285,12 @@ function mainLoop(timestamp)
 var w = window;
 var requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 
+
+function onResize()
+{
+    console.log($( window ).width().toString() + "x" + $( window ).height().toString());
+}
+
 function initialize()
 {
     canvas = document.getElementById("snake_canvas");
@@ -254,8 +302,29 @@ function initialize()
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resize', onResize); //how the fuck lad
+    
+    $('.name-input').bind('input', function(event){
+        players[ $(this).data()["player"] ].name = $(this).val();
+    });
 
     requestAnimationFrame(mainLoop);
+}
+
+function onAddPlayer(elem, index)
+{
+    players[index].enabled = true;
+    players[index].position = players[index].startPos;
+
+    $(elem + " .overlay").css("display", "none");
+}
+function onRemovePlayer(elem, index)
+{
+    players[index].enabled = false;
+    players[index].alive = false;
+    players[index].position = players[index].startPos;
+
+    $(elem + " .overlay").css("display", "flex");
 }
 
 $(document).ready(initialize);

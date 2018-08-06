@@ -1,7 +1,101 @@
-canvas{
+.center-align{         /*align canvas*/
     padding-left: 0;
     padding-right: 0;
     margin-left: auto;
     margin-right: auto;
     display: block;
 }
+
+.flex-center-align{    /*align cards*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap; 
+}
+.player-cards{
+    margin: 0.2rem 0 0.2rem 0;
+}
+.card-container{
+    position:relative;
+}
+.card{
+    border-radius: 0.5rem;
+    margin: 0.05rem 0.2rem 0.05rem 0.2rem;
+}
+.card-body{
+    padding: 0.5rem;
+}
+.card-header{
+    padding: 0.5rem;
+}
+
+.inline{
+    display:inline-block
+}
+
+.default-flex { /*this is for putting progress bars inline with text*/
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.fill-flex {    /* This is for making the progress bar grow and fill the empty space */
+    justify-content: space-between;
+}
+.flex-grow{     /* This is for making the progress bar grow and fill the empty space */
+    flex-grow:1;
+}
+
+.overlay {
+    background-color:rgba(0, 0, 0, 0.5);
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top:0%;
+    left:0%;
+    border-radius: 0.5rem;
+  }
+  
+  .progress{
+      height:0.3rem;
+  }
+  h5{
+      font-size: 1.0rem;
+  }
+
+  .aligner { /*Vertical alignment flexbox for the add player button*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .leave-game-container{ /* These 2 classes are for the red x in the corner of the player box */
+    height: 25px;
+    width: 25px;
+    background-color: rgb(255, 0, 0);
+    border-radius: 5px;
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 3px;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  }
+  .leave-game-container:hover{
+    background-color: rgb(160, 42, 42);
+  }
+
+  .leave-game-x{        /* These 2 classes are for the red x in the corner of the player box */
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 12.5px; 
+    color: #FFF;
+    line-height: 25px;
+    text-align: center;
+    font-weight: 700;
+  }
+  body{
+      background-color:rgba(0, 0, 0, 1.0);
+  }
