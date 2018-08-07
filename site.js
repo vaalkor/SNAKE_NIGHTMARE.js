@@ -307,6 +307,10 @@ function initialize()
     $('.name-input').bind('input', function(event){
         players[ $(this).data()["player"] ].name = $(this).val();
     });
+    $(".card").each(function(index){
+        console.log(index);
+        $(this).children(".card-header").css("background-color", players[index].color);
+    });
 
     requestAnimationFrame(mainLoop);
 }
@@ -328,7 +332,3 @@ function onRemovePlayer(elem, index)
 }
 
 $(document).ready(initialize);
-
-console.log(players);
-
-

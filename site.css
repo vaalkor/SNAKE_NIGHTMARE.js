@@ -22,12 +22,14 @@
 .card{
     border-radius: 0.5rem;
     margin: 0.05rem 0.2rem 0.05rem 0.2rem;
+    border:none;
 }
 .card-body{
     padding: 0.5rem;
 }
 .card-header{
     padding: 0.5rem;
+    background-color: #e6194b;
 }
 
 .inline{
