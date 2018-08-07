@@ -126,10 +126,34 @@
             </div>
         </div>
         
-
     </div>
     
     <canvas id="snake_canvas" class="center-align" width="800" height="800" style="border:1px solid"></canvas>
 
+    <div class="flex-center-align">
+        <div class="form-check options">
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck1" onclick="checkParam('sprintModeEnabled')" checked>
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Sprint Mode?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck2" onclick="checkParam('holeySprintMode')" >
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Sprint Gaps?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck3" onclick="checkParam('bombModeEnabled')"  checked>
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Bombs?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck4" onclick="checkParam('wrapEnabled')" >
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Wrap?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck5" onclick="checkParam('brModeEnabled')" >
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                BR Mode?
+            </label>
+        </div>
+    </div>
+      
 </body>
 </html>

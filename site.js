@@ -11,12 +11,21 @@ var deltaTime           = 0;
 ////=====KEY DATA========////////
 var keysPressed         = Array(256).fill(false);
 ////=====SNAKE DATA======//////
-var brModeEnabled       = false;
-var sprintModeEnabled   = true;
-var holeySprintMode     = true;
-var bombModeEnabled     = true;
-var wrapEnabled         = true;
+
+var gameParams = 
+{
+    brModeEnabled: false,
+    sprintModeEnabled: true,
+    holeySprintMode: false,
+    wrapEnabled: false,
+    bombModeEnabled: true
+};
+
+var wallEncroachmentInc = 8;
+var wallEncroachmentTime= 2500;
 var wallEncroachment    = 0;
+var battleRoyalTimer    = null;
+
 var bombRadius          = 5;
 var sprintLength        = 1000;
 var sprintRechargeTime  = 10000; //10 seconds (ms)
@@ -27,6 +36,8 @@ var gameIteration       = 0;
 var winnerId            = -1;
 var gameInProgress      = true;
 var playOnPlayersReady  = true;
+
+
 
 var CellTypes = 
 {
@@ -71,9 +82,16 @@ function createPlayer(id, startPos,color,keyMapping)
     return player;
 }
 
+function checkParam(param)
+{
+    gameParams[param] = !gameParams[param];
+}
+
 function handleKeyDown(e)
 {
     keysPressed[e.keyCode] = true;
+    if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40 || e.keyCode == 32)
+        e.preventDefault();
 }
 
 function handleKeyUp(e)
@@ -106,13 +124,13 @@ function iteratePlayerState()
         if(p.enabled && p.alive)
         {
             //increment bomb and sprint counters
-            if(bombModeEnabled && p.bombCharge < bombRechargeTime)
+            if(gameParams.bombModeEnabled && p.bombCharge < bombRechargeTime)
             {
                 p.bombCharge += 1000/maxFps;
                 $("#player"+p.id.toString()+" .bomb").css("width", ((p.bombCharge/bombRechargeTime)*100).toString()+"%" );
             }
                 
-            if(sprintModeEnabled && p.sprintCharge < sprintRechargeTime)
+            if(gameParams.sprintModeEnabled && p.sprintCharge < sprintRechargeTime)
             {
                 p.sprintCharge += 1000/maxFps;
                 $("#player"+p.id.toString()+" .sprint").css("width", ((p.sprintCharge/sprintRechargeTime)*100).toString()+"%" );
@@ -151,7 +169,7 @@ function iteratePlayerState()
             p.pos.x += p.direction.x;
             p.pos.y += p.direction.y;
 
-            if(wrapEnabled)
+            if(gameParams.wrapEnabled)
             {
                 if(p.pos.x >= gridSize) p.pos.x -= gridSize;
                 if(p.pos.x < 0)         p.pos.x += gridSize;
@@ -159,14 +177,14 @@ function iteratePlayerState()
                 if(p.pos.y < 0)         p.pos.y += gridSize;
             }
 
-            if(bombModeEnabled && keysPressed[ p.keyMapping[ "bomb" ]] && p.bombCharge >= bombRechargeTime)
+            if(gameParams.bombModeEnabled && keysPressed[ p.keyMapping[ "bomb" ]] && p.bombCharge >= bombRechargeTime)
             {
                 p.bombCharge = 0;
                 triggerBomb(p.pos.x, p.pos.y);
             }
-            if(sprintModeEnabled && keysPressed[ p.keyMapping["sprint"]] && p.sprintCharge > 0.1*sprintRechargeTime)
+            if(gameParams.sprintModeEnabled && keysPressed[ p.keyMapping["sprint"]] && p.sprintCharge > 0.1*sprintRechargeTime)
             {
-                if(!holeySprintMode && (p.pos.x >= 0 && p.pos.x < gridSize && p.pos.y >= 0 && p.pos.y < gridSize) )
+                if(!gameParams.holeySprintMode && (p.pos.x >= 0 && p.pos.x < gridSize && p.pos.y >= 0 && p.pos.y < gridSize) )
                 {
                     tailArray[p.pos.x][p.pos.y].type      = CellTypes.Tail;
                     tailArray[p.pos.x][p.pos.y].id        = p.id;
@@ -255,12 +273,12 @@ function triggerBomb(x,y)
 //needs validating
 function updateBattleRoyaleState()
 {
-    for(let y=0; y<height;y++)
+    for(let y=0; y < gridSize; y++)
     {
-        for(let x=0; x<width;x++)
+        for(let x=0; x < gridSize; x++)
         {
-            if(    x<wallEncroachment || x >= (width-wallEncroachment)
-                || y<wallEncroachment || y >= (height-wallEncroachment) )
+            if(    x < wallEncroachment || x >= (gridSize-wallEncroachment)
+                || y < wallEncroachment || y >= (gridSize-wallEncroachment) )
                 tailArray[x][y].type = CellTypes.Wall;
             else
                 tailArray[x][y].id = 0;
@@ -317,8 +335,6 @@ function draw()
                 drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, "#f00000");
             else if(tailArray[i][j].type == CellTypes.Wall)
                 drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, "#0000f0");
-            
-
         }
     //draw heads
     players.forEach(function(p){
@@ -373,15 +389,13 @@ function mainLoop(timestamp)
 var w = window;
 var requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 
-
 function onResize()
 {
     console.log($( window ).width().toString() + "x" + $( window ).height().toString());
 }
 
 function initialize()
-{
-
+{ 
     canvas = document.getElementById("snake_canvas");
     ctx = canvas.getContext("2d");
     
@@ -390,7 +404,7 @@ function initialize()
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('resize', onResize); //how the fuck lad
+    window.addEventListener('resize', onResize);
     
     $('.name-input').bind('input', function(event){
         players[ $(this).data()["player"] ].name = $(this).val();
