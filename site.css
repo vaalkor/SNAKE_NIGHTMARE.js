@@ -16,7 +16,7 @@
 .player-cards{
     margin: 0.2rem 0 0.2rem 0;
 }
-.card-container{
+.relative{
     position:relative;
 }
 .card{
