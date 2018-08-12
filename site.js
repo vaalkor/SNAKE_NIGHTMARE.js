@@ -15,7 +15,7 @@ var keysPressed         = Array(256).fill(false);
 
 var gameModes = 
 {
-    brModeEnabled: false,
+    brModeEnabled: true,
     sprintModeEnabled: true,
     holeySprintMode: false,
     wrapEnabled: false,
@@ -26,8 +26,8 @@ var gameModes =
 var battleRoyalTimer    = null;
 
 //game parameters
-var wallEncroachmentInc = 8;
-var wallEncroachmentTime= 2500;
+var wallEncroachmentInc = 6;
+var wallEncroachmentTime= 3500;
 var wallEncroachment    = 0;
 var bombRadius          = 5;
 var sprintLength        = 1000;
@@ -64,7 +64,7 @@ var players = [];
 players[0] = createPlayer(0,{x:25,y:25}, "#3cb44b", {"up":87,"down":83,"left":65,"right":68, "sprint":20, "bomb": 16});
 players[1] = createPlayer(1,{x:75,y:75}, "#e6194b", {"up":38,"down":40,"left":37,"right":39, "sprint":46, "bomb": 35});
 players[2] = createPlayer(2,{x:75,y:25}, "#ffe119", {"up":89,"down":72,"left":71,"right":74, "sprint":67, "bomb": 86});
-players[3] = createPlayer(3,{x:25,y:75}, "#0082c8", {"up":80,"down":186,"left":76,"right":222, "sprint":188, "bomb": 190});
+players[3] = createPlayer(3,{x:25,y:75}, "#0082c8", {"up":80,"down":59,"left":76,"right":222, "sprint":188, "bomb": 190});
 
 function createPlayer(id, startPos,color,keyMapping)
 {
@@ -233,8 +233,9 @@ function checkCollisions()
     players.forEach(function(p){
         if(p.enabled && p.alive)
         {
-            //check for collision with edge of map
-            if(p.pos.x < 0 || p.pos.x >= gridSize || p.pos.y < 0 || p.pos.y >= gridSize)
+            if(tailArray[p.pos.x][p.pos.y].type == CellTypes.Wall)
+                p.alive = false
+            else if(p.pos.x < 0 || p.pos.x >= gridSize || p.pos.y < 0 || p.pos.y >= gridSize)
                 p.alive = false;
             else if( tailArray[p.pos.x][p.pos.y].type == CellTypes.Tail ) //check for collision with other snake tails
                 p.alive = false;
@@ -269,6 +270,7 @@ function checkWinConditions()
         winnerId        = -1;
         printWinMessage = true;
 
+        draw();
         resetGame();
         setTimeout(startRoundTimeout, 3000);
     }
@@ -277,10 +279,10 @@ function checkWinConditions()
         gameInProgress  = false;
         winnerId        = lastAliveId;
         printWinMessage = true;
-
         players[winnerId].wins++;
         
         updatePlayerScore(winnerId);
+        draw();  
         resetGame();
 
         if(players[winnerId].wins == cupWinLimit)
@@ -310,6 +312,7 @@ function triggerBomb(x,y)
 //needs validating.. also needs simplifying a bit.. you set things that already walls to be walls. that's a bit rubbish
 function updateBattleRoyaleState()
 {
+    wallEncroachment += wallEncroachmentInc;
     for(let y=0; y < gridSize; y++)
     {
         for(let x=0; x < gridSize; x++)
@@ -318,7 +321,7 @@ function updateBattleRoyaleState()
                 || y < wallEncroachment || y >= (gridSize-wallEncroachment) )
                 tailArray[x][y].type = CellTypes.Wall;
             else
-                tailArray[x][y].id = 0;
+                tailArray[x][y].type = CellTypes.None;
         }
     }
 }
@@ -333,6 +336,10 @@ function resetGame()
         p.bombCharge    = 0;
         p.sprintCharge  = 0;
     });
+
+    wallEncroachment = 0;
+    if(battleRoyalTimer != null)
+        clearInterval(battleRoyalTimer);
 
     for(let i=0;i<gridSize;i++)
         for(let j=0; j<gridSize;j++)
@@ -363,16 +370,6 @@ function drawBackground()
 }
 function draw()
 {
-    if(printWinMessage)
-    {
-        ctx.font = "30px Arial";
-        if(winnerId == -1)
-            ctx.fillText("Draw... You all suck ",(canvas.width/2-0.2*canvas.width),(canvas.height/2-0.2*canvas.height));
-        else
-            ctx.fillText(players[winnerId].name+" Wins!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));
-        return;
-    }
-
     drawBackground();
     drawGrid();
 
@@ -385,13 +382,25 @@ function draw()
             else if(tailArray[i][j].type == CellTypes.Bomb)
                 drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, "#f00000");
             else if(tailArray[i][j].type == CellTypes.Wall)
-                drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, "#0000f0");
+                drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, "#000000");
         }
     //draw heads
     players.forEach(function(p){
         if(p.enabled && p.alive)
             drawSquare(p.pos.x*currentBlockSize,p.pos.y*currentBlockSize,currentBlockSize, p.color);
     });
+
+    if(printWinMessage)
+    {
+        ctx.font = "30px Arial";
+        if(winnerId == -1)
+            ctx.fillText("Draw... You all suck ",(canvas.width/2-0.2*canvas.width),(canvas.height/2-0.2*canvas.height));
+        else
+        {
+            ctx.fillStyle = players[winnerId].color;
+            ctx.fillText(players[winnerId].name+" Wins!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));
+        }
+    }
 }
 
 function onStartButtonPressed()
@@ -423,6 +432,9 @@ function startRoundTimeout()
     waitingForReady = true;
     numReady        = 0;
     
+    if(gameModes.brModeEnabled)
+        battleRoyalTimer = setInterval(updateBattleRoyaleState, wallEncroachmentTime);
+
     draw();
 }
 function endGameTimeout()
@@ -469,6 +481,8 @@ function initialize()
     window.addEventListener('resize', onResize);
     
     $('.name-input').bind('input', function(event){
+        console.log($(this).data()["player"]);
+        console.log( $(this).val() );
         players[ $(this).data()["player"] ].name = $(this).val();
     });
     $(".card").each(function(index){

@@ -18,7 +18,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
-                    <input type="text" class="name-input" data-player="0" style="width:90px;">
+                    <input type="text" class="name-input" data-player="0" style="width:90px;" autocomplete="off">
                     <h5 class="inline"> Score: </h5>
                     <h5 class="inline win-count">0</h5>
                     <div class="leave-game-container" onclick="onRemovePlayer('#player0',0)">
@@ -46,7 +46,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
-                    <input type="text" class="name-input" data-player="1" style="width:90px;">
+                    <input type="text" class="name-input" data-player="1" style="width:90px;" autocomplete="off">
                     <h5 class="inline"> Score: </h5>
                     <h5 class="inline win-count">0</h5>
                     <div class="leave-game-container" onclick="onRemovePlayer('#player1',1)">
@@ -74,7 +74,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
-                    <input type="text" class="name-input" data-player="2" style="width:90px;">
+                    <input type="text" class="name-input" data-player="2" style="width:90px;" autocomplete="off">
                     <h5 class="inline"> Score: </h5>
                     <h5 class="inline win-count">0</h5>
                     <div class="leave-game-container" onclick="onRemovePlayer('#player2',2)">
@@ -102,7 +102,7 @@
             <div class="card" >
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
-                    <input type="text" class="name-input" data-player="3" style="width:90px;">
+                    <input type="text" class="name-input" data-player="3" style="width:90px;" autocomplete="off">
                     <h5 class="inline"> Score: </h5>
                     <h5 class="inline win-count">0</h5>
                     <div class="leave-game-container" onclick="onRemovePlayer('#player3',3)">
@@ -129,14 +129,14 @@
     </div>
     
     <div class="relative">
-        <canvas id="snake_canvas" class="center-align" width="800" height="800" style="border:1px solid"></canvas>
+        <canvas id="snake_canvas" class="center-align" width="800" height="800"></canvas>
         <div class="overlay aligner" id="startGameButton">
             <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Start Game</button>
         </div>
     </div>
 
     <div class="flex-center-align">
-        <div class="form-check options">
+        <div class="form-check options" autocomplete="off">
             <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck1" onclick="checkMode('sprintModeEnabled')" checked>
             <label class="form-check-label ml-4" for="defaultCheck1">
                 Sprint Mode?
