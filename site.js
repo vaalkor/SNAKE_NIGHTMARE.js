@@ -2,8 +2,6 @@
 ////=====CANVAS DATA=====/////
 var canvas;
 var ctx;
-var backgroundColor     = "#333333";
-var gridColor           = "#111111";
 var currentBlockSize;
 ////=====ANIMATION DATA==/////
 var lastFrameMs         = 0;
@@ -12,30 +10,38 @@ var deltaTime           = 0;
 ////=====KEY DATA========////////
 var keysPressed         = Array(256).fill(false);
 ////=====SNAKE DATA======//////
-
+var CellTypes = 
+{
+    None: 0,
+    Tail: 1,
+    Wall: 2,
+    Bomb: 3
+}
 var gameModes = 
 {
-    brModeEnabled: true,
+    brModeEnabled: false,
     sprintModeEnabled: true,
     holeySprintMode: false,
     wrapEnabled: false,
     bombModeEnabled: true
 };
+var params = //Everything in here will be modifiable in the params modal box when I actually make it.
+{
+    backgroundColor:        "#333333",
+    gridColor:              "#111111",
+    wallEncroachmentInc:    6,
+    wallEncroachmentTime:   3500,
+    bombRadius:             5,
+    sprintLength:           1000,
+    sprintRechargeTime:     10000, //10 seconds (ms)
+    bombRechargeTime:       10000,
+    cupWinLimit:            3,
+    gridSize:               100
+};
 
-//timer for updating battle royale state at arbitrary intervals.
-var battleRoyalTimer    = null;
-
-//game parameters
-var wallEncroachmentInc = 6;
-var wallEncroachmentTime= 3500;
+//game state variables. global variables galore!
+var battleRoyalTimer    = null; //timer for updating battle royale state at arbitrary intervals.
 var wallEncroachment    = 0;
-var bombRadius          = 5;
-var sprintLength        = 1000;
-var sprintRechargeTime  = 10000; //10 seconds (ms)
-var bombRechargeTime    = 10000;
-var cupWinLimit         = 3;
-var gridSize            = 100;
-//game state variables
 var gameInProgress      = false;
 var waitingForReady     = false;
 var playOnPlayersReady  = true;
@@ -44,20 +50,12 @@ var numPlayers          = 0;
 var numReady            = 0;
 var winnerId            = -1;
 
-var CellTypes = 
-{
-    None: 0,
-    Tail: 1,
-    Wall: 2,
-    Bomb: 3
-}
-
 // declare tail collision array
-var tailArray = new Array(gridSize);
-for(let i=0; i<gridSize;i++)
-    tailArray[i] = new Array(gridSize);
-for(let i=0;i<gridSize;i++)
-    for(let j=0; j<gridSize;j++)
+var tailArray = new Array(params.gridSize);
+for(let i=0; i<params.gridSize;i++)
+    tailArray[i] = new Array(params.gridSize);
+for(let i=0;i<params.gridSize;i++)
+    for(let j=0; j<params.gridSize;j++)
         tailArray[i][j] = { type: CellTypes.None, id:-1};
 
 var players = [];
@@ -102,9 +100,9 @@ function handleKeyDown(e)
     if(waitingForReady)
     {
         players.forEach(function(p){ //this if statement is formatted REALLY badly but I'll fix that later...
-            if  (p.ready == false                   &&
-                (keyCode == p.keyMapping["up"]      || keyCode == p.keyMapping["left"]     ||     
-                 keyCode == p.keyMapping["right"]   || keyCode == p.keyMapping["down"])     )     
+            if  (p.enabled && p.ready == false 
+                && (keyCode == p.keyMapping["up"]      || keyCode == p.keyMapping["left"] ||     
+                    keyCode == p.keyMapping["right"]   || keyCode == p.keyMapping["down"])     )     
             {
                 p.ready = true;
                 numReady++;
@@ -146,8 +144,8 @@ function newPos(pos)
 ////=====MAIN GAME LOGIC FUNCTIONS======//////
 function iteratePlayerState()
 {
-    for(let i=0;i<gridSize;i++)
-        for(let j=0;j<gridSize;j++)
+    for(let i=0;i<params.gridSize;i++)
+        for(let j=0;j<params.gridSize;j++)
             if(tailArray[i][j].type == CellTypes.Bomb)
                 tailArray[i][j].type = CellTypes.None;
 
@@ -155,10 +153,10 @@ function iteratePlayerState()
         if(p.enabled && p.alive)
         {
             //increment bomb and sprint counters
-            if(gameModes.bombModeEnabled && p.bombCharge < bombRechargeTime)
+            if(gameModes.bombModeEnabled && p.bombCharge < params.bombRechargeTime)
                 p.bombCharge += 1000/maxFps;
                 
-            if(gameModes.sprintModeEnabled && p.sprintCharge < sprintRechargeTime)
+            if(gameModes.sprintModeEnabled && p.sprintCharge < params.sprintRechargeTime)
                 p.sprintCharge += 1000/maxFps;
 
             //update the tail array for the previous position
@@ -197,20 +195,20 @@ function iteratePlayerState()
 
             if(gameModes.wrapEnabled)
             {
-                if(p.pos.x >= gridSize) p.pos.x -= gridSize;
-                if(p.pos.x < 0)         p.pos.x += gridSize;
-                if(p.pos.y >= gridSize) p.pos.y -= gridSize;
-                if(p.pos.y < 0)         p.pos.y += gridSize;
+                if(p.pos.x >= params.gridSize) p.pos.x -= params.gridSize;
+                if(p.pos.x < 0)         p.pos.x += params.gridSize;
+                if(p.pos.y >= params.gridSize) p.pos.y -= params.gridSize;
+                if(p.pos.y < 0)         p.pos.y += params.gridSize;
             }
 
-            if(gameModes.bombModeEnabled && keysPressed[ p.keyMapping[ "bomb" ]] && p.bombCharge >= bombRechargeTime)
+            if(gameModes.bombModeEnabled && keysPressed[ p.keyMapping[ "bomb" ]] && p.bombCharge >= params.bombRechargeTime)
             {
                 p.bombCharge = 0;
                 triggerBomb(p.pos.x, p.pos.y);
             }
-            if(gameModes.sprintModeEnabled && keysPressed[ p.keyMapping["sprint"]] && p.sprintCharge > 0.1*sprintRechargeTime)
+            if(gameModes.sprintModeEnabled && keysPressed[ p.keyMapping["sprint"]] && p.sprintCharge > 0.1*params.sprintRechargeTime)
             {
-                if(!gameModes.holeySprintMode && (p.pos.x >= 0 && p.pos.x < gridSize && p.pos.y >= 0 && p.pos.y < gridSize) )
+                if(!gameModes.holeySprintMode && (p.pos.x >= 0 && p.pos.x < params.gridSize && p.pos.y >= 0 && p.pos.y < params.gridSize) )
                 {
                     tailArray[p.pos.x][p.pos.y].type      = CellTypes.Tail;
                     tailArray[p.pos.x][p.pos.y].id        = p.id;
@@ -218,7 +216,7 @@ function iteratePlayerState()
                 p.pos.x += p.direction.x;
                 p.pos.y += p.direction.y;
 
-                p.sprintCharge -= deltaTime * sprintRechargeTime/sprintLength;
+                p.sprintCharge -= deltaTime * params.sprintRechargeTime/params.sprintLength;
             }
 
         }
@@ -233,22 +231,30 @@ function checkCollisions()
     players.forEach(function(p){
         if(p.enabled && p.alive)
         {
-            if(tailArray[p.pos.x][p.pos.y].type == CellTypes.Wall)
-                p.alive = false
-            else if(p.pos.x < 0 || p.pos.x >= gridSize || p.pos.y < 0 || p.pos.y >= gridSize)
-                p.alive = false;
-            else if( tailArray[p.pos.x][p.pos.y].type == CellTypes.Tail ) //check for collision with other snake tails
-                p.alive = false;
+            p.alive = IsPlayerAlive(p);
             
-            players.forEach(function(p2){                                 //check for collision with other snake heads
+            players.forEach(function(p2){ 
                 if(p2.enabled && p.alive && p2.id != p.id && posEqual(p2.pos, p.pos))
                 {
                     p.alive = false;
-                    p2.alive = false; //I update both here, but it's not actually necessary. It just saves performing another loop iteration
+                    p2.alive = false;
                 }
             });
         }    
     });
+}
+
+//This checks for collisions with other snake tails, pubg mode walls and the edge of the map
+function IsPlayerAlive(p)
+{
+    if(p.pos.x < 0 || p.pos.x >= params.gridSize || p.pos.y < 0 || p.pos.y >= params.gridSize)
+        return false;
+    else if(tailArray[p.pos.x][p.pos.y].type == CellTypes.Wall)
+        return false;
+    else if( tailArray[p.pos.x][p.pos.y].type == CellTypes.Tail ) //check for collision with other snake tails
+        return false;
+
+    return true;
 }
 
 function checkWinConditions()
@@ -285,40 +291,40 @@ function checkWinConditions()
         draw();  
         resetGame();
 
-        if(players[winnerId].wins == cupWinLimit)
-            setTimeout(endGameTimeout, 1500);
+        if(players[winnerId].wins == params.cupWinLimit)
+            setTimeout(endGameTimeout, 6500);
         else
             setTimeout(startRoundTimeout, 3000);   
             
     }
 }
 
-//needs validating
+
 function triggerBomb(x,y)
 {
-    var minX = x-bombRadius; var minY = y-bombRadius;
-    var maxX = x+bombRadius; var maxY = y+bombRadius;
+    var minX = x-params.bombRadius; var minY = y-params.bombRadius;
+    var maxX = x+params.bombRadius; var maxY = y+params.bombRadius;
 
     if(minX < 0) minX = 0;
     if(minY < 0) minY = 0;
-    if(maxX >= gridSize) maxX = gridSize -1;
-    if(maxY >= gridSize) maxY = gridSize -1;
+    if(maxX >= params.gridSize) maxX = params.gridSize -1;
+    if(maxY >= params.gridSize) maxY = params.gridSize -1;
 
     for(let y=minY; y<=maxY; y++)
         for(let x=minX; x<= maxX; x++)
             if( tailArray[x][y].type != CellTypes.Wall)
                 tailArray[x][y].type = CellTypes.Bomb;
 }
-//needs validating.. also needs simplifying a bit.. you set things that already walls to be walls. that's a bit rubbish
+
 function updateBattleRoyaleState()
 {
-    wallEncroachment += wallEncroachmentInc;
-    for(let y=0; y < gridSize; y++)
+    wallEncroachment += params.wallEncroachmentInc;
+    for(let y=0; y < params.gridSize; y++)
     {
-        for(let x=0; x < gridSize; x++)
+        for(let x=0; x < params.gridSize; x++)
         {
-            if(    x < wallEncroachment || x >= (gridSize-wallEncroachment)
-                || y < wallEncroachment || y >= (gridSize-wallEncroachment) )
+            if(    x < wallEncroachment || x >= (params.gridSize-wallEncroachment)
+                || y < wallEncroachment || y >= (params.gridSize-wallEncroachment) )
                 tailArray[x][y].type = CellTypes.Wall;
             else
                 tailArray[x][y].type = CellTypes.None;
@@ -341,8 +347,8 @@ function resetGame()
     if(battleRoyalTimer != null)
         clearInterval(battleRoyalTimer);
 
-    for(let i=0;i<gridSize;i++)
-        for(let j=0; j<gridSize;j++)
+    for(let i=0;i<params.gridSize;i++)
+        for(let j=0; j<params.gridSize;j++)
             tailArray[i][j] = { type: CellTypes.None, id:-1};
 
 }
@@ -350,8 +356,8 @@ function resetGame()
 ////=====DRAWING FUNCTIONS======//////
 function drawGrid()
 {
-    ctx.fillStyle = gridColor;
-    for(let i=1;i<gridSize;i++)
+    ctx.fillStyle = params.gridColor;
+    for(let i=1;i<params.gridSize;i++)
     {
         ctx.fillRect(i*currentBlockSize, 0, 1, canvas.width);
         ctx.fillRect(0,i*currentBlockSize, canvas.height, 1);
@@ -374,8 +380,8 @@ function draw()
     drawGrid();
 
     //draw tails
-    for(let i=0;i<gridSize;i++)
-        for(let j=0; j<gridSize;j++)
+    for(let i=0;i<params.gridSize;i++)
+        for(let j=0; j<params.gridSize;j++)
         {
             if(tailArray[i][j].type == CellTypes.Tail)
                 drawSquare(i*currentBlockSize,j*currentBlockSize,currentBlockSize, players[tailArray[i][j].id].color);
@@ -395,7 +401,12 @@ function draw()
         ctx.font = "30px Arial";
         if(winnerId == -1)
             ctx.fillText("Draw... You all suck ",(canvas.width/2-0.2*canvas.width),(canvas.height/2-0.2*canvas.height));
-        else
+        else if(players[winnerId].wins == params.cupWinLimit)
+        {
+            ctx.fillStyle = players[winnerId].color;
+                ctx.fillText(players[winnerId].name+" WINS THE CUP!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));   
+        }
+        else 
         {
             ctx.fillStyle = players[winnerId].color;
             ctx.fillText(players[winnerId].name+" Wins!",(canvas.width/2-0.12*canvas.width),(canvas.height/2-0.0*canvas.height));
@@ -433,7 +444,7 @@ function startRoundTimeout()
     numReady        = 0;
     
     if(gameModes.brModeEnabled)
-        battleRoyalTimer = setInterval(updateBattleRoyaleState, wallEncroachmentTime);
+        battleRoyalTimer = setInterval(updateBattleRoyaleState, params.wallEncroachmentTime);
 
     draw();
 }
@@ -474,7 +485,7 @@ function initialize()
 { 
     canvas = document.getElementById("snake_canvas");
     ctx = canvas.getContext("2d");
-    currentBlockSize = canvas.height / gridSize;
+    currentBlockSize = canvas.height / params.gridSize;
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
@@ -497,8 +508,8 @@ function initialize()
 function updateSprintAndBombBars()
 {
     players.forEach(function(p){
-        $("#player"+p.id.toString()+" .bomb").css("width", ((p.bombCharge/bombRechargeTime)*100).toString()+"%" );
-        $("#player"+p.id.toString()+" .sprint").css("width", ((p.sprintCharge/sprintRechargeTime)*100).toString()+"%" );
+        $("#player"+p.id.toString()+" .bomb").css("width", ((p.bombCharge/params.bombRechargeTime)*100).toString()+"%" );
+        $("#player"+p.id.toString()+" .sprint").css("width", ((p.sprintCharge/params.sprintRechargeTime)*100).toString()+"%" );
     });
 }
 
