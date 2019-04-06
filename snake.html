@@ -19,10 +19,13 @@
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
                     <input type="text" class="name-input" data-player="0" style="width:90px;" autocomplete="off">
-                    <h5 class="inline"> Score: </h5>
+                    <h5 class="inline"> Pts: </h5>
                     <h5 class="inline win-count">0</h5>
-                    <div class="leave-game-container" onclick="onRemovePlayer('#player0',0)">
-                        <div class="leave-game-x">X</div>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player0',0)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player0',0)">
+                        <div class="player-button-text">C</div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -47,10 +50,13 @@
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
                     <input type="text" class="name-input" data-player="1" style="width:90px;" autocomplete="off">
-                    <h5 class="inline"> Score: </h5>
+                    <h5 class="inline"> Pts: </h5>
                     <h5 class="inline win-count">0</h5>
-                    <div class="leave-game-container" onclick="onRemovePlayer('#player1',1)">
-                        <div class="leave-game-x">X</div>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player1',1)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player1',1)">
+                        <div class="player-button-text">C</div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -75,10 +81,13 @@
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
                     <input type="text" class="name-input" data-player="2" style="width:90px;" autocomplete="off">
-                    <h5 class="inline"> Score: </h5>
+                    <h5 class="inline"> Pts: </h5>
                     <h5 class="inline win-count">0</h5>
-                    <div class="leave-game-container" onclick="onRemovePlayer('#player2',2)">
-                        <div class="leave-game-x">X</div>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player2',2)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player2',2)">
+                        <div class="player-button-text">C</div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -103,10 +112,13 @@
                 <div class="card-header">
                     <h5 class="inline"> Name</h5>
                     <input type="text" class="name-input" data-player="3" style="width:90px;" autocomplete="off">
-                    <h5 class="inline"> Score: </h5>
+                    <h5 class="inline"> Pts: </h5>
                     <h5 class="inline win-count">0</h5>
-                    <div class="leave-game-container" onclick="onRemovePlayer('#player3',3)">
-                        <div class="leave-game-x">X</div>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player3',3)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player3',3)">
+                        <div class="player-button-text">C</div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -132,6 +144,24 @@
         <canvas id="snake_canvas" class="center-align" width="800" height="800"></canvas>
         <div class="overlay aligner" id="startGameButton">
             <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Start Game</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="up">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Up</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="down">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Down</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="left">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Left</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="right">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Right</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="sprint">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Sprint</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="bomb">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Bomb</button>
         </div>
     </div>
 

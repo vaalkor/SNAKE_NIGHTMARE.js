@@ -36,7 +36,7 @@ var params = //Everything in here will be modifiable in the params modal box whe
     sprintRechargeTime:     10000, //10 seconds (ms)
     bombRechargeTime:       10000,
     cupWinLimit:            3,
-    gridSize:               100
+    gridSize:               129
 };
 
 //game state variables. global variables galore!
@@ -44,11 +44,14 @@ var battleRoyalTimer    = null; //timer for updating battle royale state at arbi
 var wallEncroachment    = 0;
 var gameInProgress      = false;
 var waitingForReady     = false;
+var currConfigCntrls    = false;
+var currPlyrConfig      = null;
 var playOnPlayersReady  = true;
 var printWinMessage     = false;
 var numPlayers          = 0;
 var numReady            = 0;
 var winnerId            = -1;
+var configButtons       = null;
 
 // declare tail collision array
 var tailArray = new Array(params.gridSize);
@@ -416,7 +419,8 @@ function draw()
 
 function onStartButtonPressed()
 {
-    //reset all the players' wins to 0
+    if(currConfigCntrls) return;
+
     players.forEach(function(p){
         p.wins = 0;
         updatePlayerScore(p.id);
@@ -487,6 +491,8 @@ function initialize()
     ctx = canvas.getContext("2d");
     currentBlockSize = canvas.height / params.gridSize;
 
+    getAndHideConfigButtons();
+
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', onResize);
@@ -505,6 +511,15 @@ function initialize()
     updateSprintAndBombBars();
 }
 
+function getAndHideConfigButtons()
+{
+    var buttons = $(".config-button");
+    buttons.each(function(b){
+        console.log($(this).data()["button"]);
+        $(this).css("display", "none");
+    });
+}
+
 function updateSprintAndBombBars()
 {
     players.forEach(function(p){
@@ -520,6 +535,7 @@ function updatePlayerScore(id)
 
 function onAddPlayer(elem, index)
 {
+
     numPlayers++;
     players[index].enabled = true;
     players[index].position = players[index].startPos;
@@ -532,6 +548,16 @@ function onRemovePlayer(elem, index)
     players[index].enabled = false;
     players[index].alive = false;
     players[index].position = players[index].startPos;
+
+    $(elem + " .overlay").css("display", "flex");
+}
+function onConfigPlayer(elem, index)
+{
+    if(gameInProgress) return;
+
+    var player = players[index];
+    currConfigCntrls = true;
+    currPlyrConfig   = player;
 
     $(elem + " .overlay").css("display", "flex");
 }
