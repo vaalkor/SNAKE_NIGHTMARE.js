@@ -14,11 +14,11 @@ var keysPressed = Array(256).fill(false);
 ////=====SNAKE DATA======//////
 var CellTypes =
 {
-    None: 0,
-    Tail: 1,
-    Wall: 2,
-    Bomb: 3,
-    NoTailZone: 4
+    None: 0, Tail: 1, Wall: 2, Bomb: 3, NoTailZone: 4
+}
+var Direction = 
+{
+    Up: 0, Right: 1, Down: 2, Left: 3
 }
 var gameModes =
 {
@@ -76,8 +76,8 @@ function createPlayer(id, startPos, color, keyMapping)
     player.pos = propPosToGrid(startPos);
     player.tempPos = propPosToGrid(startPos);
     player.color = color;
-    player.direction = { x: 1, y: 0 };
-    player.startDirection = { x: 1, y: 0 };
+    player.direction = Direction.Up;
+    player.startDirection = Direction.Up;
     player.keyMapping = keyMapping;
     player.name = "Choose Name";
     player.wins = 0;
@@ -103,8 +103,13 @@ function checkMode(param)
 
 function handleKeyDown(e) 
 {
+    //ignore directional buttons and stuff so the page doesn't move when they are pressed.
+    var keyCode = e.keyCode;
+    if (keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 || keyCode === 32)
+    e.preventDefault();
+
     if (currConfigCntrls) 
-    {       
+    {        
         configButtons.each(function (b) { $(this).css("display", "none"); })
         var button = configButtons[currButtonConfig];
         currPlyrConfig.keyMapping[$(button).data()["button"]] = e.keyCode;
@@ -112,7 +117,7 @@ function handleKeyDown(e)
         button = configButtons[currButtonConfig];
         $(button).css("display", "flex");
         
-        if(currButtonConfig == configButtons.length)
+        if(currButtonConfig === configButtons.length)
         {
             configButtons.each(function (b) { $(this).css("display", "none"); })
             currConfigCntrls = false;
@@ -122,48 +127,75 @@ function handleKeyDown(e)
     }
     else 
     {
-        var keyCode = e.keyCode;
         keysPressed[keyCode] = true;
-        if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40 || keyCode == 32)
-            e.preventDefault();
 
-        if (waitingForReady) 
-        {
-            players.forEach(function (p) { //this if statement is formatted REALLY badly but I'll fix that later...
-                if (p.enabled && p.ready == false
-                    && (keyCode == p.keyMapping["up"] || keyCode == p.keyMapping["left"] ||
-                        keyCode == p.keyMapping["right"] || keyCode == p.keyMapping["down"])) {
-                    p.ready = true;
-                    numReady++;
-                }
-            });
-
-            if (numReady > numPlayers)
-                numReady = numPlayers;
-
-            console.log("numready: " + numReady.toString());
-            console.log("numplayers: " + numPlayers.toString());
-            if (numReady == numPlayers) 
+        //Change directions of any player if needed.
+        players.forEach(function (p) 
+        { //this if statement is formatted REALLY badly but I'll fix that later...
+            var dir = TryGetKeyPressDirection(keyCode, p);
+            if (p.enabled &&  dir != null) 
             {
-                waitingForReady = false;
-                setTimeout(requestAnimationFrame(mainLoop), 0);
+                checkPlayerReadyAfterKeyPress(p);
+                TryChangeDirection(p, dir);
             }
-        }
+        });
     }
-
-
-
 }
-
-function handleKeyUp(e) 
+function handleKeyUp(e)
 {
     keysPressed[e.keyCode] = false;
+}
+
+//Tries to change direction. Will not change if it would cause the snake to go back on itself.
+function TryChangeDirection(player, direction)
+{
+    var potentialNewPos = moveInDirectionFromPos(player.pos, direction);
+    if(!posEqual(potentialNewPos, player.tempPos)) player.direction = direction;
+}
+
+//Checks if the player is pressing a directional key, and if they are, returns the direction.
+function TryGetKeyPressDirection(keyCode, player)
+{
+    if(keyCode === player.keyMapping["up"]) return Direction.Up;
+    else if(keyCode === player.keyMapping["right"]) return Direction.Right;
+    else if(keyCode === player.keyMapping["down"]) return Direction.Down;
+    else if(keyCode === player.keyMapping["left"]) return Direction.Left;
+    return null;
+}
+
+function checkPlayerReadyAfterKeyPress(p)
+{
+    if(!waitingForReady || p.ready) return;
+    
+    p.ready = true;
+    numReady++;
+
+    if(numReady > numPlayers)
+        numReady = numPlayers;
+
+    console.log("numready: " + numReady.toString());
+    console.log("numplayers: " + numPlayers.toString());
+    if (numReady === numPlayers) 
+    {
+        waitingForReady = false;
+        setTimeout(requestAnimationFrame(mainLoop), 0);
+    }
+}
+
+function moveInDirectionFromPos(pos, direction)
+{
+    var newPosition = newPos(pos);
+    if(direction === Direction.Up) newPosition.y -=1;
+    else if(direction === Direction.Right) newPosition.x += 1;
+    else if(direction === Direction.Down) newPosition.y +=1;
+    else if(direction === Direction.Left) newPosition.x -=1;
+    return newPosition;
 }
 
 //functions for dealing with position objects...
 function posEqual(pos1, pos2) 
 {
-    if (pos1.x == pos2.x && pos1.y == pos2.y)
+    if (pos1.x === pos2.x && pos1.y === pos2.y)
         return true;
     else
         return false;
@@ -186,7 +218,7 @@ function propPosToGrid(p)
 function iteratePlayerState() {
     for (let i = 0; i < params.gridSize; i++)
         for (let j = 0; j < params.gridSize; j++)
-            if (tailArray[i][j].type == CellTypes.Bomb)
+            if (tailArray[i][j].type === CellTypes.Bomb)
                 tailArray[i][j].type = CellTypes.None;
 
     players.forEach(function (p) {
@@ -204,43 +236,19 @@ function iteratePlayerState() {
 				tailArray[p.pos.x][p.pos.y].type = CellTypes.Tail;
 				tailArray[p.pos.x][p.pos.y].id = p.id;
 			}
-            
-            if (keysPressed[p.keyMapping["left"]])
-                if (p.direction.x != 1 && (p.pos.x - 1) != p.tempPos.x) 
-                {
-                    p.direction.x = -1;
-                    p.direction.y = 0;
-                }
-            if (keysPressed[p.keyMapping["right"]])
-                if (p.direction.x != -1 && (p.pos.x + 1) != p.tempPos.x) 
-                {
-                    p.direction.x = 1;
-                    p.direction.y = 0;
-                }
-            if (keysPressed[p.keyMapping["up"]])
-                if (p.direction.y != 1 && (p.pos.y - 1) != p.tempPos.y) 
-                {
-                    p.direction.x = 0;
-                    p.direction.y = -1;
-                }
-            if (keysPressed[p.keyMapping["down"]])
-                if (p.direction.y != -1 && (p.pos.y + 1) != p.tempPos.y) 
-                {
-                    p.direction.x = 0;
-                    p.direction.y = 1;
-                }
 
-            p.tempPos = newPos(p.pos);
-			
+            p.tempPos = newPos(p.pos); //Save previous position for checking whether we will go backwards on ourselves in KeyDown handler.
+            
+            //HANDLE BOMB ENABLED MODE
             if (gameModes.bombModeEnabled && keysPressed[p.keyMapping["bomb"]] && p.bombCharge >= params.bombRechargeTime) 
             {
                 p.bombCharge = 0;
                 triggerBomb(p.pos.x, p.pos.y);
             }
 
-            p.pos.x += p.direction.x;
-            p.pos.y += p.direction.y;
+            p.pos = moveInDirectionFromPos(p.pos, p.direction);
 
+            //HANDLE SPRINT ENABLED MODE
             if (gameModes.sprintModeEnabled && keysPressed[p.keyMapping["sprint"]] && p.sprintCharge > 0.1 * params.sprintRechargeTime) 
             {
                 if (!gameModes.holeySprintMode && (p.pos.x >= 0 && p.pos.x < params.gridSize && p.pos.y >= 0 && p.pos.y < params.gridSize)) 
@@ -248,12 +256,12 @@ function iteratePlayerState() {
                     tailArray[p.pos.x][p.pos.y].type = CellTypes.Tail;
                     tailArray[p.pos.x][p.pos.y].id = p.id;
                 }
-                p.pos.x += p.direction.x;
-                p.pos.y += p.direction.y;
+                p.pos = moveInDirectionFromPos(p.pos, p.direction);
 
                 p.sprintCharge -= deltaTime * params.sprintRechargeTime / params.sprintLength;
             }
-			
+            
+            //HANDLE WRAP ENABLED MODE
             if (gameModes.wrapEnabled) 
             {
                 if (p.pos.x >= params.gridSize) p.pos.x -= params.gridSize;
@@ -263,25 +271,23 @@ function iteratePlayerState() {
             }
         }
     });
-
-    updateSprintAndBombBars();
-
 }
 
 function checkCollisions() {
-    players.forEach(function (p) {
-        if (p.enabled && p.alive)
-        {
-            p.alive = IsPlayerAlive(p);
+    players.forEach(function (p) 
+    {
+        if (!p.enabled || !p.alive) return;
+        
+        p.alive = IsPlayerAlive(p);
 
-            players.forEach(function (p2) {
-                if (p2.enabled && p.alive && p2.id != p.id && posEqual(p2.pos, p.pos)) 
-                {
-                    p.alive = false;
-                    p2.alive = false;
-                }
-            });
-        }
+        players.forEach(function (p2) 
+        {
+            if (p2.enabled && p.alive && p2.id != p.id && posEqual(p2.pos, p.pos)) 
+            {
+                p.alive = false;
+                p2.alive = false;
+            }
+        });
     });
 }
 
@@ -289,9 +295,9 @@ function checkCollisions() {
 function IsPlayerAlive(p) {
     if (p.pos.x < 0 || p.pos.x >= params.gridSize || p.pos.y < 0 || p.pos.y >= params.gridSize)
         return false;
-    else if (tailArray[p.pos.x][p.pos.y].type == CellTypes.Wall)
+    else if (tailArray[p.pos.x][p.pos.y].type === CellTypes.Wall)
         return false;
-    else if (tailArray[p.pos.x][p.pos.y].type == CellTypes.Tail) //check for collision with other snake tails
+    else if (tailArray[p.pos.x][p.pos.y].type === CellTypes.Tail) //check for collision with other snake tails
         return false;
 
     return true;
@@ -302,7 +308,8 @@ function checkWinConditions()
     var lastAliveId = 0;
     var numAlive = 0;
 
-    players.forEach(function (p) {
+    players.forEach(function (p) 
+    {
         if (p.enabled && p.alive) 
         {
             lastAliveId = p.id;
@@ -310,7 +317,7 @@ function checkWinConditions()
         }
     });
 
-    if (numAlive == 0) 
+    if (numAlive === 0) 
     {
         gameInProgress = false;
         winnerId = -1;
@@ -320,7 +327,7 @@ function checkWinConditions()
         resetGame();
         setTimeout(startRoundTimeout, 3000);
     }
-    else if (numAlive == 1) 
+    else if (numAlive === 1) 
     {
         gameInProgress = false;
         winnerId = lastAliveId;
@@ -331,7 +338,7 @@ function checkWinConditions()
         draw();
         resetGame();
 
-        if (players[winnerId].wins == params.cupWinLimit)
+        if (players[winnerId].wins === params.cupWinLimit)
             setTimeout(endGameTimeout, 6500);
         else
             setTimeout(startRoundTimeout, 3000);
@@ -371,9 +378,10 @@ function updateBattleRoyaleState() {
 }
 
 function resetGame() {
-    players.forEach(function (p) {
+    players.forEach(function (p) 
+    {
         p.alive = p.enabled;
-        p.direction = newPos(p.startDirection);
+        p.direction = p.startDirection;
         p.ready = false;
 		p.pos = propPosToGrid(p.startPos);
         p.bombCharge = 0;
@@ -396,7 +404,8 @@ function resetGame() {
 }
 
 ////=====DRAWING FUNCTIONS======//////
-function drawGrid() {
+function drawGrid() 
+{
     ctx.fillStyle = params.gridColor;
     for (let i = 1; i < params.gridSize; i++) 
     {
@@ -425,17 +434,18 @@ function draw() {
     for (let i = 0; i < params.gridSize; i++)
         for (let j = 0; j < params.gridSize; j++) 
         {
-            if (tailArray[i][j].type == CellTypes.Tail)
+            if (tailArray[i][j].type === CellTypes.Tail)
                 drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, players[tailArray[i][j].id].color);
-            else if (tailArray[i][j].type == CellTypes.Bomb)
+            else if (tailArray[i][j].type === CellTypes.Bomb)
                 drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#f00000");
-            else if (tailArray[i][j].type == CellTypes.Wall)
+            else if (tailArray[i][j].type === CellTypes.Wall)
                 drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
-			else if (tailArray[i][j].type == CellTypes.NoTailZone)
+			else if (tailArray[i][j].type === CellTypes.NoTailZone)
 				drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
         }
     //draw heads
-    players.forEach(function (p) {
+    players.forEach(function (p) 
+    {
         if (p.enabled)
             drawSquare(p.pos.x * currentBlockSize, p.pos.y * currentBlockSize, currentBlockSize, p.color);
     });
@@ -443,11 +453,11 @@ function draw() {
     if (printWinMessage) 
     {
         ctx.font = "30px Arial";
-        if (winnerId == -1)
+        if (winnerId === -1)
         {
             ctx.fillText("Draw... You all suck ", (canvas.width / 2 - 0.2 * canvas.width), (canvas.height / 2 - 0.2 * canvas.height));
         }
-        else if (players[winnerId].wins == params.cupWinLimit) 
+        else if (players[winnerId].wins === params.cupWinLimit) 
         {
             ctx.fillStyle = players[winnerId].color;
             ctx.fillText(players[winnerId].name + " WINS THE CUP!", (canvas.width / 2 - 0.12 * canvas.width), (canvas.height / 2 - 0.0 * canvas.height));
@@ -533,6 +543,7 @@ function mainLoop(timestamp)
     lastFrameMs = timestamp;
 
     iteratePlayerState();
+    updateSprintAndBombBars();
     checkCollisions();
     checkWinConditions();
     if(gameInProgress)
@@ -560,10 +571,12 @@ function initialize()
     document.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', onResize);
 
-    $('.name-input').bind('input', function (event) { //bind name change function to each player name textbox
+    $('.name-input').bind('input', function (event) 
+    { //bind name change function to each player name textbox
         players[$(this).data()["player"]].name = $(this).val();
     });
-    $(".card").each(function (index) { //set card-header colors...
+    $(".card").each(function (index) 
+    { //set card-header colors...
         $(this).children(".card-header").css("background-color", players[index].color);
     });
 
@@ -576,7 +589,8 @@ function initialize()
 function getAndHideConfigButtons() //Go and find the hidden buttons used for configuring controls
 {
     configButtons = $(".config-button");
-    configButtons.each(function (b) {
+    configButtons.each(function (b) 
+    {
         $(this).css("display", "none");
     });
 }
