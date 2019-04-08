@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<header>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="site.css" />
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="site.js"></script>
+
+</header>
+
+<body>
+
+    <div class="player-cards flex-center-align">
+
+        <div class="relative" id="player0">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="inline"> Name</h5>
+                    <input type="text" class="name-input" data-player="0" style="width:90px;" autocomplete="off">
+                    <h5 class="inline"> Pts: </h5>
+                    <h5 class="inline win-count">0</h5>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player0',0)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player0',0)">
+                        <div class="player-button-text">C</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Sprint</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-success sprint" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Bomb</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-danger bomb" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overlay aligner" value="0">
+                <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player0',0)">Add Player</button>
+            </div>
+        </div>
+
+        <div class="relative" id="player1">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="inline"> Name</h5>
+                    <input type="text" class="name-input" data-player="1" style="width:90px;" autocomplete="off">
+                    <h5 class="inline"> Pts: </h5>
+                    <h5 class="inline win-count">0</h5>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player1',1)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player1',1)">
+                        <div class="player-button-text">C</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Sprint</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-success sprint" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Bomb</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-danger bomb" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overlay aligner" value="1">
+                <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player1',1)">Add Player</button>
+            </div>
+        </div>
+
+        <div class="relative" id="player2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="inline"> Name</h5>
+                    <input type="text" class="name-input" data-player="2" style="width:90px;" autocomplete="off">
+                    <h5 class="inline"> Pts: </h5>
+                    <h5 class="inline win-count">0</h5>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player2',2)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player2',2)">
+                        <div class="player-button-text">C</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Sprint</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-success sprint" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Bomb</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-danger bomb" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overlay aligner" value="2">
+                <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player2',2)">Add Player</button>
+            </div>
+        </div>
+
+        <div class="relative" id="player3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="inline"> Name</h5>
+                    <input type="text" class="name-input" data-player="3" style="width:90px;" autocomplete="off">
+                    <h5 class="inline"> Pts: </h5>
+                    <h5 class="inline win-count">0</h5>
+                    <div class="player-card-button-container leave-game-container " onclick="onRemovePlayer('#player3',3)">
+                        <div class="player-button-text">X</div>
+                    </div>
+                    <div class="player-card-button-container config-change-container " onclick="onConfigPlayer('#player3',3)">
+                        <div class="player-button-text">C</div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Sprint</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-success sprint" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    <div class="default-flex fill-flex">
+                        <h5 class="card-title mr-2">Bomb</h5>
+                        <div class="progress flex-grow">
+                            <div class="progress-bar bg-danger bomb" role="progressbar" style="width: 38%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overlay aligner" value="3">
+                <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player3',3)">Add Player</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="relative">
+        <canvas id="snake_canvas" class="center-align" width="800" height="800"></canvas>
+        <div class="overlay aligner config-button" data-button="up">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Up</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="down">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Down</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="left">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Left</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="right">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Right</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="sprint">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Sprint</button>
+        </div>
+        <div class="overlay aligner config-button" data-button="bomb">
+            <button type="button" class="btn" onclick="onStartButtonPressed()">Bomb</button>
+        </div>
+        <div class="overlay aligner" id="startGameButton">
+            <button type="button" class="btn btn-success" onclick="onStartButtonPressed()">Start Game</button>
+        </div>
+    </div>
+
+    <div class="flex-center-align">
+        <div class="form-check options" autocomplete="off">
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck1" onclick="checkMode('sprintModeEnabled')"
+                checked>
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Sprint Mode?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck2" onclick="checkMode('holeySprintMode')">
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Sprint Gaps?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck3" onclick="checkMode('bombModeEnabled')" checked>
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Bombs?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck4" onclick="checkMode('wrapEnabled')">
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                Wrap?
+            </label>
+            <input class="form-check-input ml-2" type="checkbox" value="" id="defaultCheck5" onclick="checkMode('brModeEnabled')">
+            <label class="form-check-label ml-4" for="defaultCheck1">
+                BR Mode?
+            </label>
+            <input type="button" class="end-cup-button" value="Cancel Cup" onclick="onCancelCup()">
+        </div>
+        
+    </div>
+
+</body>
+
+</html>
