@@ -57,6 +57,7 @@ var numPlayers = 0;
 var numReady = 0;
 var winnerId = -1;
 var configButtons = null;
+var tailArray = null;
 
 var players = [];
 players[0] = createPlayer(0, { x: 0.25, y: 0.25 }, "#3cb44b", { "up": 87, "down": 83, "left": 65, "right": 68, "sprint": 20, "bomb": 16 });
@@ -87,7 +88,7 @@ function createPlayer(id, startPos, color, keyMapping)
 
 function DeclareTailArray()
 {
-    var tailArray = new Array(params.gridSize);
+    tailArray = new Array(params.gridSize);
     for (let i = 0; i < params.gridSize; i++)
         tailArray[i] = new Array(params.gridSize);
     for (let i = 0; i < params.gridSize; i++)
