@@ -118,3 +118,14 @@
       margin:0.25rem;
       width:800px;
   }
+  .end-cup-button {
+    background-color: rgb(160, 42, 42);
+    border: none;
+    color: white;
+    padding: 4px 4px;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 8px;
+    margin: 4px 10px;
+    cursor: pointer;
+  }
