@@ -7,7 +7,6 @@ var w = window;
 var requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 ////=====ANIMATION DATA==/////
 var lastFrameMs = 0;
-var maxFps = 18;
 var deltaTime = 0;
 ////=====KEY DATA========////////
 var keysPressed = Array(256).fill(false);
@@ -24,10 +23,10 @@ var gameModes =
 {
     brModeEnabled: false,
     sprintModeEnabled: true,
-    holeySprintMode: false,
-    wrapEnabled: false,
+    holeySprintMode: true,
+    wrapEnabled: true,
     bombModeEnabled: true,
-    noTailZonesEnabled: true
+    noTailZonesEnabled: false
 };
 var params = //Everything in here will be modifiable in the params modal box when I actually make it.
 {
@@ -40,7 +39,9 @@ var params = //Everything in here will be modifiable in the params modal box whe
     sprintRechargeTime: 7500, //10 seconds (ms)
     bombRechargeTime: 3000,
     cupWinLimit: 10,
-    gridSize: 50
+    gridSize: 50,
+    tempGridSize: 50, //this is stored so the params modal can modify this if it is called during a game for some weird reason. when the game starts gridsize will be set to tempgridsize.
+    maxFps: 18
 };
 
 //game state variables. global variables galore!
@@ -88,6 +89,11 @@ function createPlayer(id, startPos, color, keyMapping)
 
 function DeclareTailArray()
 {
+    params.gridSize = params.tempGridSize;
+    if(tailArray != undefined && tailArray.Length == params.gridSize) return;
+
+    currentBlockSize = canvas.height / params.gridSize;
+
     tailArray = new Array(params.gridSize);
     for (let i = 0; i < params.gridSize; i++)
         tailArray[i] = new Array(params.gridSize);
@@ -225,10 +231,10 @@ function iteratePlayerState() {
         if (p.enabled && p.alive) {
             //increment bomb and sprint counters
             if (gameModes.bombModeEnabled && p.bombCharge < params.bombRechargeTime)
-                p.bombCharge += 1000 / maxFps;
+                p.bombCharge += 1000 / params.maxFps;
 
             if (gameModes.sprintModeEnabled && p.sprintCharge < params.sprintRechargeTime)
-                p.sprintCharge += 1000 / maxFps;
+                p.sprintCharge += 1000 / params.maxFps;
 
             //update the tail array for the previous position
 			if(tailArray[p.pos.x][p.pos.y].type != CellTypes.NoTailZone)
@@ -378,6 +384,8 @@ function updateBattleRoyaleState() {
 }
 
 function resetGame() {
+    DeclareTailArray();
+
     players.forEach(function (p) 
     {
         p.alive = p.enabled;
@@ -434,14 +442,19 @@ function draw() {
     for (let i = 0; i < params.gridSize; i++)
         for (let j = 0; j < params.gridSize; j++) 
         {
-            if (tailArray[i][j].type === CellTypes.Tail)
-                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, players[tailArray[i][j].id].color);
-            else if (tailArray[i][j].type === CellTypes.Bomb)
-                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#f00000");
-            else if (tailArray[i][j].type === CellTypes.Wall)
-                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
-			else if (tailArray[i][j].type === CellTypes.NoTailZone)
-				drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
+            try{
+                if (tailArray[i][j].type === CellTypes.Tail)
+                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, players[tailArray[i][j].id].color);
+                else if (tailArray[i][j].type === CellTypes.Bomb)
+                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#f00000");
+                else if (tailArray[i][j].type === CellTypes.Wall)
+                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
+                else if (tailArray[i][j].type === CellTypes.NoTailZone)
+                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
+            }catch(e){
+                console.log("sdfsd");
+            }
+            
         }
     //draw heads
     players.forEach(function (p) 
@@ -534,7 +547,7 @@ function endGameTimeout()
 function mainLoop(timestamp) 
 {
     //clamp the framerate...
-    if (timestamp < lastFrameMs + (1000 / maxFps)) 
+    if (timestamp < lastFrameMs + (1000 / params.maxFps)) 
     {
         requestAnimationFrame(mainLoop);
         return;
@@ -563,7 +576,6 @@ function initialize()
 {
     canvas = document.getElementById("snake_canvas");
     ctx = canvas.getContext("2d");
-    currentBlockSize = canvas.height / params.gridSize;
 
     getAndHideConfigButtons();
 
@@ -646,6 +658,25 @@ function onCancelCup()
     resetGame();
     draw();
     $("#startGameButton").css("display", "flex");
+}
+
+function onChangeGridSize(value)
+{
+    var parseResult = parseInt(value);
+    if(parseResult !== NaN) params.tempGridSize = parseResult;
+
+    if(!gameInProgress)
+    {
+        params.gridSize = parseResult;
+        resetGame();
+        draw();
+    }
+}
+
+function onChangeFrameRate(value)
+{
+    var parseResult = parseInt(value);
+    if(parseResult !== NaN) params.maxFps = parseResult;
 }
 
 $(document).ready(initialize);

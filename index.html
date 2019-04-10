@@ -202,37 +202,37 @@
         <div class="modal-body">
             <h4>Game Modes</h4>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" checked="true" id="SprintModeCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> Sprint Mode? </label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('sprintModeEnabled')" onclick="" checked="true" id="SprintModeCheckbox">
+                <label class="form-check-label" for="SprintModeCheckbox"> Sprint Mode? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" checked="true" id="SprintGapsCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> Sprint Gaps?</label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('holeySprintMode')" checked="true" id="SprintGapsCheckbox">
+                <label class="form-check-label" for="SprintGapsCheckbox"> Sprint Gaps?</label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" checked="true" id="BombsCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> Bombs? </label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('bombModeEnabled')" checked="true" id="BombsCheckbox">
+                <label class="form-check-label" for="BombsCheckbox"> Bombs? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" checked="true" id="WrapCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> Map Wrapping? </label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('wrapEnabled')" checked="true" id="WrapCheckbox">
+                <label class="form-check-label" for="WrapCheckbox"> Map Wrapping? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" value="" id="BRModeCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> BR Mode? </label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('brModeEnabled')" value="false" id="BRModeCheckbox">
+                <label class="form-check-label" for="BRModeCheckbox"> BR Mode? </label>
             </div>
-    
+
             <h4>Environmental Effects</h4>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" value="" id="NoTailZonesCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> No Tail Zones? </label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('noTailZonesEnabled')" value="false" id="NoTailZonesCheckbox">
+                <label class="form-check-label" for="NoTailZonesCheckbox"> No Tail Zones? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" value="" id="FastZonesCheckbox">
-                <label class="form-check-label" for="defaultCheck1"> Fast Zones?</label>
+                <input class="form-check-input" type="checkbox" onclick="checkMode('fastZonesEnabled')" value="" id="FastZonesCheckbox">
+                <label class="form-check-label" for="FastZonesCheckbox"> Fast Zones?</label>
             </div>
             
-            <div id="NoTailZonesCheckboxOptions">
+            <div id="NoTailZonesCheckboxOptions" style="display:none">
                 <div class="form-row align-items-center">
                     <div class="col-auto">
                         <div class="input-group input-group-sm mb-2">
@@ -261,6 +261,13 @@
                     
                 </div>
             </div>
+            <hr/>
+            <label for="GridSizeRange"><strong>Grid Size (Default 50)</strong>: This will change immediately if no game is in progress.</label>
+            <input type="range" class="custom-range" min="10" max="200" value="50" onChange="onChangeGridSize(this.value)" id="GridSizeRange">
+
+            <label for="MaxFpsRange"><strong>Game Speed (Default 20 FPS)</strong>:</label>
+            <input type="range" class="custom-range" min="10" max="60" value="18" onChange="onChangeFrameRate(this.value)" id="MaxFpsRange">
+
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
