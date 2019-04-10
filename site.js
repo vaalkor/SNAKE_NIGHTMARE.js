@@ -442,19 +442,14 @@ function draw() {
     for (let i = 0; i < params.gridSize; i++)
         for (let j = 0; j < params.gridSize; j++) 
         {
-            try{
-                if (tailArray[i][j].type === CellTypes.Tail)
-                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, players[tailArray[i][j].id].color);
-                else if (tailArray[i][j].type === CellTypes.Bomb)
-                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#f00000");
-                else if (tailArray[i][j].type === CellTypes.Wall)
-                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
-                else if (tailArray[i][j].type === CellTypes.NoTailZone)
-                    drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
-            }catch(e){
-                console.log("sdfsd");
-            }
-            
+            if (tailArray[i][j].type === CellTypes.Tail)
+                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, players[tailArray[i][j].id].color);
+            else if (tailArray[i][j].type === CellTypes.Bomb)
+                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#f00000");
+            else if (tailArray[i][j].type === CellTypes.Wall)
+                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
+            else if (tailArray[i][j].type === CellTypes.NoTailZone)
+                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
         }
     //draw heads
     players.forEach(function (p) 
