@@ -13,7 +13,7 @@ var keysPressed = Array(256).fill(false);
 ////=====SNAKE DATA======//////
 var CellTypes =
 {
-    None: 0, Tail: 1, Wall: 2, Bomb: 3, NoTailZone: 4
+    None: 0, Tail: 1, Wall: 2, Bomb: 3, NoTailZone: 4, COCKEND: 6
 }
 var Direction = 
 {
