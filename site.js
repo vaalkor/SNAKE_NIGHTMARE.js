@@ -21,6 +21,7 @@ var Direction =
 }
 var gameModes =
 {
+    version: 1,
     brModeEnabled: false,
     sprintModeEnabled: true,
     holeySprintMode: true,
@@ -30,7 +31,10 @@ var gameModes =
 };
 var params = //Everything in here will be modifiable in the params modal box when I actually make it.
 {
+    version: 1,
     backgroundColor: "#ffd1dc",
+    backgroundColor2: '#ffd1dc', //not sure about these colours now... Probs should allow the user to choose and store in localstorage...
+    // backgroundColor2: '#d4abb5',
     gridColor: "#333333",
     wallEncroachmentInc: 1,
     wallEncroachmentTime: 600,
@@ -432,10 +436,42 @@ function drawSquare(x, y, width, color)
     ctx.fillRect(x, y, width, width);
 }
 
+function drawTriangle(x1, y1, x2, y2, x3, y3, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.fill();
+}
+
+function drawPlayerHead(x, y, width, color, direction) 
+{
+    if(direction === Direction.Down){
+        drawTriangle(x, y, x+currentBlockSize, y, x+currentBlockSize/2, y+currentBlockSize/2, color);
+    }
+    else if(direction === Direction.Up){
+        drawTriangle(x, y+currentBlockSize, x+currentBlockSize, y+currentBlockSize, x+currentBlockSize/2, y+currentBlockSize/2, color);
+    }
+    else if(direction === Direction.Left){
+        drawTriangle(x+currentBlockSize, y, x+currentBlockSize, y+currentBlockSize, x+currentBlockSize/2, y+currentBlockSize/2, color);
+    }
+    else if(direction === Direction.Right){
+        drawTriangle(x, y, x, y+currentBlockSize, x+currentBlockSize/2, y+currentBlockSize/2, color);
+    }
+    else{        
+        console.warn(`Unkown direction: '${direction}'. Something really messed up is happenign`);
+    }
+}
+
 function drawBackground() 
 {
-    ctx.fillStyle = params.backgroundColor;
-    ctx.fillRect(0, 0, canvas.height, canvas.width);
+    for (let i = 0; i < params.gridSize; i++)
+        for (let j = 0; j < params.gridSize; j++) 
+        {
+            if((i+j)%2) drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, params.backgroundColor);
+            else drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, params.backgroundColor2);
+        }
 }
 function draw() {
     drawBackground();
@@ -458,7 +494,7 @@ function draw() {
     players.forEach(function (p) 
     {
         if (p.enabled)
-            drawSquare(p.pos.x * currentBlockSize, p.pos.y * currentBlockSize, currentBlockSize, p.color);
+            drawPlayerHead(p.pos.x * currentBlockSize, p.pos.y * currentBlockSize, currentBlockSize, p.color, p.direction);
     });
 
     if (printWinMessage) 
