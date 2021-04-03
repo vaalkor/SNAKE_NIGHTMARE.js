@@ -269,14 +269,18 @@ function iteratePlayerState() {
             
             //HANDLE WRAP ENABLED MODE
             if (gameModes.wrapEnabled) 
-            {
-                if (p.pos.x >= params.gridSize) p.pos.x -= params.gridSize;
-                if (p.pos.x < 0) p.pos.x += params.gridSize;
-                if (p.pos.y >= params.gridSize) p.pos.y -= params.gridSize;
-                if (p.pos.y < 0) p.pos.y += params.gridSize;
+            {   
+                p.pos.x = clampNum(p.pos.x);
+                p.pos.y = clampNum(p.pos.y);
             }
         }
     });
+}
+
+function clampNum(num){
+    if(num < 0) return num + params.gridSize;
+    else if(num >= params.gridSize) return num - params.gridSize;
+    else return num;
 }
 
 function checkCollisions() {
@@ -357,15 +361,14 @@ function triggerBomb(x, y) {
     var minX = x - params.bombRadius; var minY = y - params.bombRadius;
     var maxX = x + params.bombRadius; var maxY = y + params.bombRadius;
 
-    if (minX < 0) minX = 0;
-    if (minY < 0) minY = 0;
-    if (maxX >= params.gridSize) maxX = params.gridSize - 1;
-    if (maxY >= params.gridSize) maxY = params.gridSize - 1;
-
     for (let y = minY; y <= maxY; y++)
         for (let x = minX; x <= maxX; x++)
-            if (tailArray[x][y].type != CellTypes.Wall)
-                tailArray[x][y].type = CellTypes.Bomb;
+        {
+            let clampX = clampNum(x);
+            let clampY = clampNum(y)
+            if (tailArray[clampX][clampY].type != CellTypes.Wall)
+                tailArray[clampX][clampY].type = CellTypes.Bomb;
+        }
 }
 
 function updateBattleRoyaleState() {
@@ -483,8 +486,8 @@ function SpawnNoTailZones()
 	var num = Math.random()*12;
 	for(var i=0;i<num;i++)
 	{
-		var xPos = Math.floor(Math.random()*params.gridSize);
-		var yPos = Math.floor(Math.random()*params.gridSize);
+		var xPos = Math.floor(Math.random()*(params.gridSize+8))-8;
+		var yPos = Math.floor(Math.random()*(params.gridSize+8))-8;
 		var size = Math.floor(Math.random()*8);
 		FillGridSquare(CellTypes.NoTailZone, xPos, yPos, size);
 	}
@@ -495,11 +498,15 @@ function FillGridSquare(celltype, x,y,size)
 	for(var i=y; i < y+size && i<params.gridSize && i>=0; i++)
 	{
 		for(var j=x; j < x+size && j < params.gridSize && j>=0; j++)
-		{
+		{   
+            if(!isValidPosition(i,j)) continue;
 			tailArray[i][j].type = celltype;
 		}
 	}
-	
+}
+
+function isValidPosition(x, y){
+    return x >= 0 && x < params.gridSize && y >= 0 && y < params.gridSize;
 }
 
 function onStartButtonPressed() 
