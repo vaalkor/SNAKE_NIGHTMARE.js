@@ -3,6 +3,7 @@
 var canvas;
 var ctx;
 var currentBlockSize;
+var textOverlayEnabled = false;
 var w = window;
 var requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 ////=====ANIMATION DATA==/////
@@ -117,6 +118,12 @@ function handleKeyDown(e)
     var keyCode = e.keyCode;
     if (keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 || keyCode === 32)
     e.preventDefault();
+
+    if(textOverlayEnabled)
+    {
+
+
+    }
 
     if (currConfigCntrls) 
     {        
@@ -499,21 +506,20 @@ function draw() {
 
     if (printWinMessage) 
     {
-        ctx.font = "30px Arial";
+        let textOverlayButton = document.getElementById("textOverlayButton");
         if (winnerId === -1)
         {
-            ctx.fillText("Draw... You all suck ", (canvas.width / 2 - 0.2 * canvas.width), (canvas.height / 2 - 0.2 * canvas.height));
+            textOverlayButton.innerText = "Draw... You all suck";
         }
         else if (players[winnerId].wins === params.cupWinLimit) 
         {
-            ctx.fillStyle = players[winnerId].color;
-            ctx.fillText(players[winnerId].name + " WINS THE CUP!", (canvas.width / 2 - 0.12 * canvas.width), (canvas.height / 2 - 0.0 * canvas.height));
+            textOverlayButton.innerText = `${players[winnerId].name} WINS THE CUP!`;
         }
         else 
         {
-            ctx.fillStyle = players[winnerId].color;
-            ctx.fillText(players[winnerId].name + " Wins!", (canvas.width / 2 - 0.12 * canvas.width), (canvas.height / 2 - 0.0 * canvas.height));
+            textOverlayButton.innerText = `${players[winnerId].name} Wins!!!!`;
         }
+        $('#textOverlay').css("display", "flex");
     }
 }
 
@@ -567,6 +573,7 @@ function onStartButtonPressed()
 
 function startRoundTimeout() 
 {
+    $("#textOverlay").css("display", "none");
     printWinMessage = false;
     gameInProgress = true;
     waitingForReady = true;
@@ -579,6 +586,7 @@ function startRoundTimeout()
 }
 function endGameTimeout() 
 {
+    $("#textOverlay").css("display", "none");
     $("#startGameButton").css("display", "flex");
 }
 
