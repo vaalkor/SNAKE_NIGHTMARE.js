@@ -199,10 +199,7 @@ function moveInDirectionFromPos(pos, direction)
 //functions for dealing with position objects...
 function posEqual(pos1, pos2) 
 {
-    if (pos1.x === pos2.x && pos1.y === pos2.y)
-        return true;
-    else
-        return false;
+    return pos1.x === pos2.x && pos1.y === pos2.y;
 }
 
 function newPos(pos) 
@@ -524,12 +521,11 @@ function SpawnNoTailZones()
 
 function FillGridSquare(celltype, x,y,size)
 {
-	for(var i=y; i < y+size && i<params.gridSize && i>=0; i++)
+	for(var i=y; i < y+size && i<params.gridSize; i++)
 	{
-		for(var j=x; j < x+size && j < params.gridSize && j>=0; j++)
+		for(var j=x; j < x+size && j < params.gridSize; j++)
 		{   
-            if(!isValidPosition(i,j)) continue;
-			tailArray[i][j].type = celltype;
+			tailArray[clampNum(i)][clampNum(j)].type = celltype;
 		}
 	}
 }
@@ -619,8 +615,7 @@ function loadStorage(){
     if(storedModes) gameModes = storedModes;
 
     $('.player-card-overlay').each(function(i,x){
-        if(players[i].enabled) $(this).css("display", "none");
-        else $(this).css("display", "flex");
+        $(this).css("display", players[i].enabled ? "none" : "flex");
     });
     $('.name-input').each(function (i, x){
         $(this).val(players[i].name);
