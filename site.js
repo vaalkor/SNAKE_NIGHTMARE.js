@@ -193,6 +193,7 @@ function moveInDirectionFromPos(pos, direction)
     else if(direction === Direction.Right) newPosition.x += 1;
     else if(direction === Direction.Down) newPosition.y +=1;
     else if(direction === Direction.Left) newPosition.x -=1;
+    clampPos(newPosition);
     return newPosition;
 }
 
@@ -205,6 +206,12 @@ function posEqual(pos1, pos2)
 function newPos(pos) 
 {
     return { x: pos.x, y: pos.y };
+}
+
+function clampPos(pos)
+{
+    pos.x = clampNum(pos.x);
+    pos.y = clampNum(pos.y);
 }
 
 function propPosToGrid(p)
@@ -265,8 +272,7 @@ function iteratePlayerState() {
             //HANDLE WRAP ENABLED MODE
             if (gameModes.wrapEnabled) 
             {   
-                p.pos.x = clampNum(p.pos.x);
-                p.pos.y = clampNum(p.pos.y);
+                clampPos(p.pos);
             }
         }
     });
