@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <div class="overlay aligner" value="0">
+            <div class="overlay aligner player-card-overlay" value="0">
                 <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player0',0)">Add Player</button>
             </div>
         </div>
@@ -75,7 +75,7 @@
                 </div>
             </div>
 
-            <div class="overlay aligner" value="1">
+            <div class="overlay aligner player-card-overlay" value="1">
                 <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player1',1)">Add Player</button>
             </div>
         </div>
@@ -110,7 +110,7 @@
                 </div>
             </div>
 
-            <div class="overlay aligner" value="2">
+            <div class="overlay aligner player-card-overlay" value="2">
                 <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player2',2)">Add Player</button>
             </div>
         </div>
@@ -145,7 +145,7 @@
                 </div>
             </div>
 
-            <div class="overlay aligner" value="3">
+            <div class="overlay aligner player-card-overlay" value="3">
                 <button type="button" class="btn btn-secondary" onclick="onAddPlayer('#player3',3)">Add Player</button>
             </div>
         </div>
@@ -205,33 +205,33 @@
         <div class="modal-body">
             <h4>Game Modes</h4>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('sprintModeEnabled')" onclick="" checked="true" id="SprintModeCheckbox">
+                <input class="form-check-input" id="param-sprintModeEnabled" type="checkbox" onclick="checkMode('sprintModeEnabled')" onclick="" checked="true" id="SprintModeCheckbox">
                 <label class="form-check-label" for="SprintModeCheckbox"> Sprint Mode? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('holeySprintMode')" checked="true" id="SprintGapsCheckbox">
+                <input class="form-check-input" id= "param-holeySprintMode" type="checkbox" onclick="checkMode('holeySprintMode')" checked="true" id="SprintGapsCheckbox">
                 <label class="form-check-label" for="SprintGapsCheckbox"> Sprint Gaps?</label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('bombModeEnabled')" checked="true" id="BombsCheckbox">
+                <input class="form-check-input" id="param-bombModeEnabled" type="checkbox" onclick="checkMode('bombModeEnabled')" checked="true" id="BombsCheckbox">
                 <label class="form-check-label" for="BombsCheckbox"> Bombs? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('wrapEnabled')" checked="true" id="WrapCheckbox">
+                <input class="form-check-input" id="param-wrapEnabled" type="checkbox" onclick="checkMode('wrapEnabled')" checked="true" id="WrapCheckbox">
                 <label class="form-check-label" for="WrapCheckbox"> Map Wrapping? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('brModeEnabled')" value="false" id="BRModeCheckbox">
+                <input class="form-check-input" id="param-brModeEnabled" type="checkbox" onclick="checkMode('brModeEnabled')" value="false" id="BRModeCheckbox">
                 <label class="form-check-label" for="BRModeCheckbox"> BR Mode? </label>
             </div>
 
             <h4>Environmental Effects</h4>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('noTailZonesEnabled')" value="false" id="NoTailZonesCheckbox">
+                <input class="form-check-input" id="param-noTailZonesEnabled" type="checkbox" onclick="checkMode('noTailZonesEnabled')" value="false" id="NoTailZonesCheckbox">
                 <label class="form-check-label" for="NoTailZonesCheckbox"> No Tail Zones? </label>
             </div>
             <div class="form-check-inline">
-                <input class="form-check-input" type="checkbox" onclick="checkMode('fastZonesEnabled')" value="" id="FastZonesCheckbox">
+                <input class="form-check-input" id="param-fastZonesEnabled" type="checkbox" onclick="checkMode('fastZonesEnabled')" value="" id="FastZonesCheckbox">
                 <label class="form-check-label" for="FastZonesCheckbox"> Fast Zones?</label>
             </div>
             
@@ -266,10 +266,11 @@
             </div>
             <hr/>
             <label for="GridSizeRange"><strong>Grid Size (Default 50)</strong>: This will change immediately if no game is in progress.</label>
-            <input type="range" class="custom-range" min="10" max="200" value="50" onChange="onChangeGridSize(this.value)" id="GridSizeRange">
+            <input type="range" id="gridSizeSlider" class="custom-range" min="10" max="200" value="50" onChange="onChangeGridSize(this.value)" id="GridSizeRange">
 
             <label for="MaxFpsRange"><strong>Game Speed (Default 20 FPS)</strong>:</label>
-            <input type="range" class="custom-range" min="10" max="60" value="18" onChange="onChangeFrameRate(this.value)" id="MaxFpsRange">
+            <input type="range" id="maxFpsSlider" class="custom-range" min="10" max="60" value="18" onChange="onChangeFrameRate(this.value)" id="MaxFpsRange">
+            <button type="button" class="btn btn-primary" onclick="resetSliders()">Reset Sliders</button>
 
         </div>
         <div class="modal-footer">

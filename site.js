@@ -3,7 +3,6 @@
 var canvas;
 var ctx;
 var currentBlockSize;
-var textOverlayEnabled = false;
 var w = window;
 var requestAnimationFrame = w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.msRequestAnimationFrame || w.mozRequestAnimationFrame;
 ////=====ANIMATION DATA==/////
@@ -59,8 +58,6 @@ var currPlyrConfig = null;
 var currButtonConfig = 0;
 var playOnPlayersReady = true;
 var printWinMessage = false;
-var numPlayers = 0;
-var numReady = 0;
 var winnerId = -1;
 var configButtons = null;
 var tailArray = null;
@@ -74,6 +71,7 @@ players[3] = createPlayer(3, { x: 0.25, y: 0.75 }, "#0082c8", { "up": 80, "down"
 function createPlayer(id, startPos, color, keyMapping) 
 {
     var player = {};
+    player.version = 1;
     player.id = id;
     player.enabled = false;
     player.alive = false;
@@ -85,14 +83,14 @@ function createPlayer(id, startPos, color, keyMapping)
     player.direction = Direction.Up;
     player.startDirection = Direction.Up;
     player.keyMapping = keyMapping;
-    player.name = "Choose Name";
+    player.name = "";
     player.wins = 0;
     player.bombCharge = 0;
     player.sprintCharge = 0;
     return player;
 }
 
-function DeclareTailArray()
+function declareTailArray()
 {
     params.gridSize = params.tempGridSize;
     if(tailArray != undefined && tailArray.Length == params.gridSize) return;
@@ -110,6 +108,7 @@ function DeclareTailArray()
 function checkMode(param) 
 {
     gameModes[param] = !gameModes[param];
+    updateStorage();
 }
 
 function handleKeyDown(e) 
@@ -118,12 +117,6 @@ function handleKeyDown(e)
     var keyCode = e.keyCode;
     if (keyCode === 37 || keyCode === 38 || keyCode === 39 || keyCode === 40 || keyCode === 32)
     e.preventDefault();
-
-    if(textOverlayEnabled)
-    {
-
-
-    }
 
     if (currConfigCntrls) 
     {        
@@ -140,6 +133,7 @@ function handleKeyDown(e)
             currConfigCntrls = false;
             currButtonConfig = 0;
             $("#startGameButton").css("display", "flex");
+            updateStorage();
         }
     }
     else 
@@ -149,11 +143,11 @@ function handleKeyDown(e)
         //Change directions of any player if needed.
         players.forEach(function (p) 
         { //this if statement is formatted REALLY badly but I'll fix that later...
-            var dir = TryGetKeyPressDirection(keyCode, p);
+            var dir = tryGetKeyPressDirection(keyCode, p);
             if (p.enabled &&  dir != null) 
             {
                 checkPlayerReadyAfterKeyPress(p);
-                TryChangeDirection(p, dir);
+                tryChangeDirection(p, dir);
             }
         });
     }
@@ -164,14 +158,14 @@ function handleKeyUp(e)
 }
 
 //Tries to change direction. Will not change if it would cause the snake to go back on itself.
-function TryChangeDirection(player, direction)
+function tryChangeDirection(player, direction)
 {
     var potentialNewPos = moveInDirectionFromPos(player.pos, direction);
     if(!posEqual(potentialNewPos, player.tempPos)) player.direction = direction;
 }
 
 //Checks if the player is pressing a directional key, and if they are, returns the direction.
-function TryGetKeyPressDirection(keyCode, player)
+function tryGetKeyPressDirection(keyCode, player)
 {
     if(keyCode === player.keyMapping["up"]) return Direction.Up;
     else if(keyCode === player.keyMapping["right"]) return Direction.Right;
@@ -183,16 +177,9 @@ function TryGetKeyPressDirection(keyCode, player)
 function checkPlayerReadyAfterKeyPress(p)
 {
     if(!waitingForReady || p.ready) return;
-    
     p.ready = true;
-    numReady++;
 
-    if(numReady > numPlayers)
-        numReady = numPlayers;
-
-    console.log("numready: " + numReady.toString());
-    console.log("numplayers: " + numPlayers.toString());
-    if (numReady === numPlayers) 
+    if (players.filter(x=>x.ready).length === players.filter(x=>x.enabled).length)
     {
         waitingForReady = false;
         setTimeout(requestAnimationFrame(mainLoop), 0);
@@ -398,7 +385,7 @@ function updateBattleRoyaleState() {
 }
 
 function resetGame() {
-    DeclareTailArray();
+    declareTailArray();
 
     players.forEach(function (p) 
     {
@@ -553,6 +540,12 @@ function isValidPosition(x, y){
 
 function onStartButtonPressed() 
 {
+    if(players.some(x => x.enabled && (x.name === '')))
+    {
+        alert('Please select a name!');
+        return;
+    }
+
     if (currConfigCntrls) return;
 
     players.forEach(function (p) {
@@ -560,7 +553,7 @@ function onStartButtonPressed()
         updatePlayerScore(p.id);
     });
 
-    if (numPlayers >= 2) 
+    if (players.filter(x=>x.enabled).length >= 2) 
     {
         $("#startGameButton").css("display", "none");
 
@@ -577,7 +570,6 @@ function startRoundTimeout()
     printWinMessage = false;
     gameInProgress = true;
     waitingForReady = true;
-    numReady = 0;
 
     if (gameModes.brModeEnabled)
         battleRoyalTimer = setInterval(updateBattleRoyaleState, params.wallEncroachmentTime);
@@ -618,9 +610,65 @@ function onResize()
     //console.log($(window).width().toString() + "x" + $(window).height().toString());
 }
 
+function loadStorage(){
+    let storedPlayers = getStorageItem('players', players[0].version);
+    let storedParams = getStorageItem('params', params.version);
+    let storedModes = getStorageItem('gameModes', gameModes.version);
+    if(storedPlayers) players = storedPlayers;
+    if(storedParams) params = storedParams;
+    if(storedModes) gameModes = storedModes;
+
+    $('.player-card-overlay').each(function(i,x){
+        if(players[i].enabled) $(this).css("display", "none");
+        else $(this).css("display", "flex");
+    });
+    $('.name-input').each(function (i, x){
+        $(this).val(players[i].name);
+    });
+    Object.keys(gameModes).filter(x => x !== 'version').forEach(x => {
+        let checkbox = document.getElementById(`param-${x}`);
+        if(!checkbox){ console.warn(`Can't find param element with id: #param-${x}. What's going on there?`);return;}
+        checkbox.checked = gameModes[x];
+    });
+
+    document.getElementById("gridSizeSlider").value = params.gridSize;
+    document.getElementById("maxFpsSlider").value = params.maxFps;
+    onChangeGridSize(params.gridSize);
+}
+
+function updateStorage(){
+    window.localStorage.setItem('players', JSON.stringify(players));
+    window.localStorage.setItem('params', JSON.stringify(params));
+    window.localStorage.setItem('gameModes', JSON.stringify(gameModes));
+}
+
+function clearStorage(){
+    window.localStorage.removeItem('players');
+    window.localStorage.removeItem('params');
+    window.localStorage.removeItem('gameModes');
+}
+
+function getStorageItem(itemKey, currentVersion){
+    let storedObject = JSON.parse(window.localStorage.getItem(itemKey));
+    if(storedObject){
+        if((storedObject.version || storedObject[0].version) !== currentVersion){
+            window.localStorage.removeItem(itemKey);
+            return null;
+        }
+        return storedObject;
+    }
+}
+
+function resetSliders(){
+    params.gridSize = 50;
+    params.maxFps = 18;
+    updateStorage();
+    loadStorage();
+}
+
 function initialize() 
 {
-    canvas = document.getElementById("snake_canvas");
+   canvas = document.getElementById("snake_canvas");
     ctx = canvas.getContext("2d");
 
     getAndHideConfigButtons();
@@ -632,16 +680,18 @@ function initialize()
     $('.name-input').bind('input', function (event) 
     { //bind name change function to each player name textbox
         players[$(this).data()["player"]].name = $(this).val();
+        updateStorage();
     });
     $(".card").each(function (index) 
     { //set card-header colors...
         $(this).children(".card-header").css("background-color", players[index].color);
     });
 
-    DeclareTailArray();
+    declareTailArray();
     drawBackground();
     drawGrid();
     updateSprintAndBombBars();
+    loadStorage();
 }
 
 function getAndHideConfigButtons() //Go and find the hidden buttons used for configuring controls
@@ -668,21 +718,20 @@ function updatePlayerScore(id)
 
 function onAddPlayer(elem, index) 
 {
-
-    numPlayers++;
     players[index].enabled = true;
 	players[index].pos = propPosToGrid(players[index].startPos);
 
     $(elem + " .overlay").css("display", "none");
+    updateStorage();
 }
 
 function onRemovePlayer(elem, index) 
 {
-    numPlayers--;
     players[index].enabled = false;
     players[index].alive = false;
 
     $(elem + " .overlay").css("display", "flex");
+    updateStorage();
 }
 
 function onConfigPlayer(elem, index) 
@@ -717,12 +766,14 @@ function onChangeGridSize(value)
         resetGame();
         draw();
     }
+    updateStorage();
 }
 
 function onChangeFrameRate(value)
 {
     var parseResult = parseInt(value);
     if(parseResult !== NaN) params.maxFps = parseResult;
+    updateStorage();
 }
 
 $(document).ready(initialize);
