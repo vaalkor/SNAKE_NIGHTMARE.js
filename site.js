@@ -11,9 +11,10 @@ var deltaTime = 0;
 ////=====KEY DATA========////////
 var keysPressed = Array(256).fill(false);
 ////=====SNAKE DATA======//////
+var testingModeEnabled = false;
 var CellTypes =
 {
-    None: 0, Tail: 1, Wall: 2, Bomb: 3, NoTailZone: 4
+    None: 0, Tail: 1, Wall: 2, Bomb: 3, NoTailZone: 4, FastZone: 5
 }
 var Direction = 
 {
@@ -27,7 +28,8 @@ var gameModes =
     holeySprintMode: true,
     wrapEnabled: true,
     bombModeEnabled: true,
-    noTailZonesEnabled: false
+    noTailZonesEnabled: false,
+    fastZonesEnabled: false
 };
 var params = //Everything in here will be modifiable in the params modal box when I actually make it.
 {
@@ -157,6 +159,17 @@ function handleKeyUp(e)
     keysPressed[e.keyCode] = false;
 }
 
+function moveInDirectionFromPos(pos, direction)
+{
+    var newPosition = newPos(pos);
+    if(direction === Direction.Up) newPosition.y -=1;
+    else if(direction === Direction.Right) newPosition.x += 1;
+    else if(direction === Direction.Down) newPosition.y +=1;
+    else if(direction === Direction.Left) newPosition.x -=1;
+    clampPos(newPosition);
+    return newPosition;
+}
+
 //Tries to change direction. Will not change if it would cause the snake to go back on itself.
 function tryChangeDirection(player, direction)
 {
@@ -186,17 +199,6 @@ function checkPlayerReadyAfterKeyPress(p)
     }
 }
 
-function moveInDirectionFromPos(pos, direction)
-{
-    var newPosition = newPos(pos);
-    if(direction === Direction.Up) newPosition.y -=1;
-    else if(direction === Direction.Right) newPosition.x += 1;
-    else if(direction === Direction.Down) newPosition.y +=1;
-    else if(direction === Direction.Left) newPosition.x -=1;
-    clampPos(newPosition);
-    return newPosition;
-}
-
 //functions for dealing with position objects...
 function posEqual(pos1, pos2) 
 {
@@ -222,6 +224,23 @@ function propPosToGrid(p)
 	return pos;
 }
 
+function movePlayerInDirection(player, leaveTail)
+{
+    player.tempPos = newPos(player.pos); //Save previous position for checking whether we will go backwards on ourselves in KeyDown handler.
+
+    if((getCellTypeFromPos(player.pos) != CellTypes.NoTailZone) && leaveTail)
+    {
+        tailArray[player.pos.x][player.pos.y].type = CellTypes.Tail;
+        tailArray[player.pos.x][player.pos.y].id = player.id;
+    }
+
+    if(player.direction === Direction.Up) player.pos.y -=1;
+    else if(player.direction === Direction.Right) player.pos.x +=1;
+    else if(player.direction === Direction.Down) player.pos.y +=1;
+    else if(player.direction === Direction.Left) player.pos.x -=1;
+    clampPos(player.pos);
+}
+
 ////=====MAIN GAME LOGIC FUNCTIONS======//////
 function iteratePlayerState() {
     for (let i = 0; i < params.gridSize; i++)
@@ -229,7 +248,8 @@ function iteratePlayerState() {
             if (tailArray[i][j].type === CellTypes.Bomb)
                 tailArray[i][j].type = CellTypes.None;
 
-    players.forEach(function (p) {
+    players.forEach(function (p, i) {
+        if(testingModeEnabled){if(i!==0)return;} //In testing mode just move player 0.
         if (p.enabled && p.alive) {
             //increment bomb and sprint counters
             if (gameModes.bombModeEnabled && p.bombCharge < params.bombRechargeTime)
@@ -237,15 +257,6 @@ function iteratePlayerState() {
 
             if (gameModes.sprintModeEnabled && p.sprintCharge < params.sprintRechargeTime)
                 p.sprintCharge += 1000 / params.maxFps;
-
-            //update the tail array for the previous position
-			if(tailArray[p.pos.x][p.pos.y].type != CellTypes.NoTailZone)
-			{
-				tailArray[p.pos.x][p.pos.y].type = CellTypes.Tail;
-				tailArray[p.pos.x][p.pos.y].id = p.id;
-			}
-
-            p.tempPos = newPos(p.pos); //Save previous position for checking whether we will go backwards on ourselves in KeyDown handler.
             
             //HANDLE BOMB ENABLED MODE
             if (gameModes.bombModeEnabled && keysPressed[p.keyMapping["bomb"]] && p.bombCharge >= params.bombRechargeTime) 
@@ -253,18 +264,18 @@ function iteratePlayerState() {
                 p.bombCharge = 0;
                 triggerBomb(p.pos.x, p.pos.y);
             }
-
-            p.pos = moveInDirectionFromPos(p.pos, p.direction);
+            if(getCellTypeFromPos(p.pos) === CellTypes.FastZone){
+                movePlayerInDirection(p, !gameModes.holeySprintMode); //Do an extra movement for being in a fast zone. Happens before normal movement. Leaving tail depends on holeySprintMode.
+            }
+            movePlayerInDirection(p, true); //The standard MOVE. leaves a tail block.
 
             //HANDLE SPRINT ENABLED MODE
             if (gameModes.sprintModeEnabled && keysPressed[p.keyMapping["sprint"]] && p.sprintCharge > 0.1 * params.sprintRechargeTime) 
             {
-                if (!gameModes.holeySprintMode && (p.pos.x >= 0 && p.pos.x < params.gridSize && p.pos.y >= 0 && p.pos.y < params.gridSize)) 
-                {
-                    tailArray[p.pos.x][p.pos.y].type = CellTypes.Tail;
-                    tailArray[p.pos.x][p.pos.y].id = p.id;
+                if(getCellTypeFromPos(p.pos) === CellTypes.FastZone){
+                    movePlayerInDirection(p, !gameModes.holeySprintMode); //Do an extra movement for being in a fast zone. Happens before normal movement. Leaving tail depends on holeySprintMode.
                 }
-                p.pos = moveInDirectionFromPos(p.pos, p.direction);
+                movePlayerInDirection(p, !gameModes.holeySprintMode); //The standard MOVE. leaves a tail block.
 
                 p.sprintCharge -= deltaTime * params.sprintRechargeTime / params.sprintLength;
             }
@@ -276,6 +287,10 @@ function iteratePlayerState() {
             }
         }
     });
+}
+
+function getCellTypeFromPos(pos){
+    return tailArray[pos.x][pos.y].type;
 }
 
 function clampNum(num){
@@ -412,6 +427,10 @@ function resetGame() {
 	{
 		SpawnNoTailZones();
 	}
+    if(gameModes.fastZonesEnabled)
+    {
+        SpawnFastZones();
+    }
 
 }
 
@@ -486,6 +505,8 @@ function draw() {
                 drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#000000");
             else if (tailArray[i][j].type === CellTypes.NoTailZone)
                 drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#6633dd");
+            else if (tailArray[i][j].type === CellTypes.FastZone)
+                drawSquare(i * currentBlockSize, j * currentBlockSize, currentBlockSize, "#e0842d");
         }
     //draw heads
     players.forEach(function (p) 
@@ -523,9 +544,27 @@ function SpawnNoTailZones()
 		var size = Math.floor(Math.random()*8);
 		FillGridSquare(CellTypes.NoTailZone, xPos, yPos, size);
 	}
-}	
+}
 
-function FillGridSquare(celltype, x,y,size)
+function SpawnFastZones()
+{
+	var num = Math.random()*5;
+	for(var i=0; i < num; i++)
+	{
+		var xPos = Math.floor(Math.random()*(params.gridSize));
+		var yPos = Math.floor(Math.random()*(params.gridSize));
+        let vertical = Math.floor(Math.random()*100)%2;
+        if(vertical){
+            for(var y=0; y<params.gridSize; y++)
+                tailArray[clampNum(y)][clampNum(xPos)].type = CellTypes.FastZone;
+        }else{
+            for(var x=0; x<params.gridSize; x++)
+                tailArray[clampNum(yPos)][clampNum(x)].type = CellTypes.FastZone;
+        }
+	}
+}
+
+function FillGridSquare(celltype, x, y, size)
 {
 	for(var i=y; i < y+size && i<params.gridSize; i++)
 	{
@@ -582,28 +621,6 @@ function endGameTimeout()
 {
     $("#textOverlay").css("display", "none");
     $("#startGameButton").css("display", "flex");
-}
-
-function mainLoop(timestamp) 
-{
-    //clamp the framerate...
-    if (timestamp < lastFrameMs + (1000 / params.maxFps)) 
-    {
-        requestAnimationFrame(mainLoop);
-        return;
-    }
-    deltaTime = timestamp - lastFrameMs;
-    lastFrameMs = timestamp;
-
-    iteratePlayerState();
-    updateSprintAndBombBars();
-    checkCollisions();
-    checkWinConditions();
-    if(gameInProgress)
-    {
-        draw();
-        requestAnimationFrame(mainLoop);
-    }
 }
 
 function onResize() 
@@ -664,34 +681,6 @@ function resetSliders(){
     params.gridSize = 50;
     params.maxFps = 18;
     updateStorage();
-    loadStorage();
-}
-
-function initialize() 
-{
-   canvas = document.getElementById("snake_canvas");
-    ctx = canvas.getContext("2d");
-
-    getAndHideConfigButtons();
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('resize', onResize);
-
-    $('.name-input').bind('input', function (event) 
-    { //bind name change function to each player name textbox
-        players[$(this).data()["player"]].name = $(this).val();
-        updateStorage();
-    });
-    $(".card").each(function (index) 
-    { //set card-header colors...
-        $(this).children(".card-header").css("background-color", players[index].color);
-    });
-
-    declareTailArray();
-    drawBackground();
-    drawGrid();
-    updateSprintAndBombBars();
     loadStorage();
 }
 
@@ -775,6 +764,56 @@ function onChangeFrameRate(value)
     var parseResult = parseInt(value);
     if(parseResult !== NaN) params.maxFps = parseResult;
     updateStorage();
+}
+
+function initialize() 
+{
+    canvas = document.getElementById("snake_canvas");
+    ctx = canvas.getContext("2d");
+
+    getAndHideConfigButtons();
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resize', onResize);
+
+    $('.name-input').bind('input', function (event) 
+    { //bind name change function to each player name textbox
+        players[$(this).data()["player"]].name = $(this).val();
+        updateStorage();
+    });
+    $(".card").each(function (index) 
+    { //set card-header colors...
+        $(this).children(".card-header").css("background-color", players[index].color);
+    });
+
+    declareTailArray();
+    drawBackground();
+    drawGrid();
+    updateSprintAndBombBars();
+    loadStorage();
+}
+
+function mainLoop(timestamp) 
+{
+    //clamp the framerate...
+    if (timestamp < lastFrameMs + (1000 / params.maxFps)) 
+    {
+        requestAnimationFrame(mainLoop);
+        return;
+    }
+    deltaTime = timestamp - lastFrameMs;
+    lastFrameMs = timestamp;
+
+    iteratePlayerState();
+    updateSprintAndBombBars();
+    checkCollisions();
+    checkWinConditions();
+    if(gameInProgress)
+    {
+        draw();
+        requestAnimationFrame(mainLoop);
+    }
 }
 
 $(document).ready(initialize);
